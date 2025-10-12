@@ -1,38 +1,805 @@
-.App {
-  text-align: center;
+/* App.css */
+
+/* General page layout */
+body {
+    margin: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Container */
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Header */
+h1 {
+    color: #6b46c1; /* purple */
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+/* Workout form */
+.workout-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
-.App-link {
-  color: #61dafb;
+.workout-form input,
+.workout-form select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.workout-form input[type='number'] {
+    width: 80px;
+}
+
+.workout-form button {
+    background-color: #3182ce; /* blue */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.workout-form button:hover {
+    background-color: #2b6cb0;
+}
+
+/* Workout list */
+.workout-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.workout-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s;
+}
+
+.workout-item:hover {
+    background-color: #edf2f7;
+}
+
+.workout-item .info {
+    display: flex;
+    flex-direction: column;
+}
+
+.workout-item .exercise-name {
+    font-weight: bold;
+}
+
+.workout-item .exercise-details {
+    font-size: 12px;
+    color: #718096; /* gray */
+}
+
+.workout-item button {
+    background-color: #e53e3e; /* red */
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.workout-item button:hover {
+    background-color: #c53030;
+}
+
+/* Container */
+.summary-container {
+    width: 280px;
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background-color: #f7fafc; /* light gray */
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+/* Header */
+.summary-header {
+    font-size: 1.25rem;
+    font-weight: bold;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+/* Card */
+.summary-card {
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s;
+}
+
+.summary-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Type name */
+.summary-type {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Total weight */
+.summary-total {
+    font-size: 0.875rem;
+    color: #4a5568; /* gray-700 */
+}
+
+/* Weight-to-go */
+.summary-togo {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.weight-positive {
+    color: #2f855a; /* green-700 */
+}
+
+.weight-negative {
+    color: #c53030; /* red-700 */
+}
+
+/* Section colors */
+.type-chest {
+    background-color: #fed7d7; /* red-100 */
+    color: #9b2c2c; /* red-800 */
+}
+
+.type-back {
+    background-color: #bee3f8; /* blue-100 */
+    color: #2b6cb0; /* blue-800 */
+}
+
+.type-legs {
+    background-color: #c6f6d5; /* green-100 */
+    color: #276749; /* green-800 */
+}
+
+.type-shoulders {
+    background-color: #fefcbf; /* yellow-100 */
+    color: #975a16; /* yellow-800 */
+}
+
+.type-arms {
+    background-color: #e9d8fd; /* purple-100 */
+    color: #6b46c1; /* purple-800 */
+}
+
+.type-unknown {
+    background-color: #edf2f7; /* gray-100 */
+    color: #2d3748; /* gray-800 */
+}
+/* Workout list container */
+.workout-list-container {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+/* Date card */
+.workout-date-card {
+    margin-bottom: 16px;
+    border-radius: 12px;
+    background-color: #edf2f7; /* light gray */
+    padding: 12px;
+}
+
+/* Date header */
+.date-header {
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Type card */
+.type-card {
+    margin-left: 16px;
+    margin-top: 12px;
+    background-color: #f7fafc;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+/* Type header */
+.type-header {
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Exercise card */
+.exercise-card {
+    margin-left: 16px;
+    margin-top: 8px;
+}
+
+/* Exercise header */
+.exercise-header {
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 4px;
+}
+
+/* Individual workout item */
+.workout-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 8px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s;
+}
+
+.workout-item-card:hover {
+    background-color: #f1f5f9;
+}
+
+/* Delete button */
+.delete-button {
+    background: none;
+    border: none;
+    color: #c53030;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.delete-button:hover {
+    color: #9b2c2c;
+}
+
+.edit-button {
+    background: none;
+    border: none;
+    color: #c53030;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.edit-button:hover {
+    color: #9b2c2c;
+}
+
+/* No workouts message */
+.no-workouts {
+    text-align: center;
+    color: #718096; /* gray-500 */
+}
+
+.workout-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f7fafc; /* gray-50 */
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    transition: background-color 0.2s;
+}
+
+.workout-item:hover {
+    background-color: #edf2f7;
+}
+
+.workout-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.workout-name {
+    font-weight: 600;
+}
+
+.workout-details {
+    font-size: 0.875rem;
+    color: #4a5568; /* gray-600 */
+}
+
+.workout-delete {
+    background: none;
+    border: none;
+    color: #c53030; /* red-600 */
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.workout-delete:hover {
+    color: #9b2c2c; /* red-700 */
+}
+
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.tab-button {
+    padding: 8px 16px;
+    background-color: #e2e8f0; /* gray-200 */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.tab-button:hover {
+    background-color: #cbd5e1; /* gray-300 */
+}
+
+.tab-button.active {
+    background-color: #3182ce; /* blue */
+    color: white;
+}
+
+.workout-summary {
+    width: 100%;
+    max-width: 400px;
+    background-color: #f9f9f9;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-family: sans-serif;
+    margin-bottom: 20px;
+}
+
+.workout-summary h2 {
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.summary-table th,
+.summary-table td {
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.summary-table th {
+    border-bottom: 2px solid #ccc;
+    font-weight: bold;
+}
+
+.summary-table tr {
+    transition: background-color 0.2s;
+}
+
+.summary-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Type colors */
+.type-row.chest {
+    background-color: #ffe5e5;
+    color: #800000;
+}
+
+.type-row.back {
+    background-color: #e5f0ff;
+    color: #003366;
+}
+
+.type-row.legs {
+    background-color: #e5ffe5;
+    color: #006600;
+}
+
+.type-row.shoulders {
+    background-color: #fff7e5;
+    color: #996600;
+}
+
+.type-row.arms {
+    background-color: #f0e5ff;
+    color: #660099;
+}
+
+.type-row.unknown {
+    background-color: #eee;
+    color: #555;
+}
+
+/* Weight-to-go colors */
+.weight-to-go.positive {
+    color: green;
+    font-weight: bold;
+}
+
+.weight-to-go.negative {
+    color: red;
+    font-weight: bold;
+}
+
+/* Preferences tab */
+.preferences-container {
+    background-color: #f9f9f9;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    font-family: sans-serif;
+}
+
+.preferences-container h2 {
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+}
+
+.preferences-container ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.preferences-container li {
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.preferences-container li:hover {
+    background-color: #eaeaea;
+}
+
+.preferences-container input[type='checkbox'] {
+    margin-right: 8px;
+    accent-color: #007bff; /* checkbox color */
+}
+
+.preferences-container label {
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+}
+
+.exercise-group {
+    margin-bottom: 12px;
+}
+
+.exercise-type {
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.preferences-container ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.preferences-container li {
+    margin-bottom: 4px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.preferences-container li:hover {
+    background-color: #eaeaea;
+}
+
+.preferences-container input[type='checkbox'] {
+    margin-right: 6px;
+    accent-color: #007bff;
+}
+
+.preferences-container label {
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+}
+
+.add-exercise-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 400px;
+    padding: 16px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-exercise-form input,
+.add-exercise-form select {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.add-exercise-form button {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.add-exercise-form button:hover {
+    background-color: #0056b3;
+}
+
+.add-exercise-form .error-message {
+    color: #b00020;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.auth-container {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 32px;
+    background-color: #f0f4f8;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.auth-container h2 {
+    font-size: 1.6rem;
+    margin-bottom: 12px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.auth-form input {
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.auth-form button {
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.auth-form button:hover {
+    background-color: #0056b3;
+}
+
+.error {
+    color: #b00020;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.preferences-container {
+    max-width: 400px;
+    margin: 16px auto;
+    padding: 16px;
+    background-color: #fafafa;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.exercise-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.exercise-type {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+.exercise-group ul {
+    list-style: none;
+    padding-left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.exercise-group li label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.preferences-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 600px; /* increased width */
+    margin: 20px auto;
+    font-family: sans-serif;
+}
+
+.exercise-type-dropdown {
+    position: relative;
+    width: 100%;
+    min-width: 300px; /* ensures dropdowns are wide even on smaller screens */
+}
+
+.dropdown-toggle {
+    width: 100%;
+    padding: 12px 16px; /* more padding */
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    background-color: #f9f9f9;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.dropdown-toggle:hover {
+    background-color: #f0f0f0;
+    border-color: #999;
+}
+
+.dropdown-toggle::after {
+    content: '▼';
+    font-size: 14px;
+    margin-left: 8px;
+    transition: transform 0.2s ease;
+}
+
+.exercise-type-dropdown .dropdown-menu {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    width: 100%;
+    max-height: 300px; /* slightly taller */
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    padding: 10px; /* more padding */
+    transition: all 0.2s ease;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* wider spacing */
+    padding: 8px 10px; /* more padding for bigger click target */
+    font-size: 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+.dropdown-item input[type='checkbox'] {
+    width: 18px;
+    height: 18px; /* larger checkboxes */
+    cursor: pointer;
+}
+
+.tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.tabs button {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background-color: #f5f5f5;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.tabs button:hover {
+    background-color: #e0e0e0;
+    border-color: #999;
+}
+
+.tabs button.active {
+    background-color: #4f46e5; /* purple for active tab */
+    color: white;
+    border-color: #4f46e5;
+}
+
+.tab-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* center horizontally */
+    justify-content: flex-start; /* start from top */
+    gap: 20px;
+    width: 100%;
+    max-width: 800px; /* optional max width */
+    margin: 0 auto; /* center container */
+    padding: 20px;
+}
+
+.tab-content > * {
+    width: 100%; /* child elements take full width for layout consistency */
+}
+
+.workout-list-container,
+.preferences-container,
+.workout-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
