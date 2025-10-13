@@ -1,5 +1,26 @@
 import { calculateSectionStats } from '../helpers/workout'
+import { Line } from 'react-chartjs-2'
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+} from 'chart.js'
 import './WorkoutSummary.css'
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+)
 
 export default function WorkoutSummary({ workouts }) {
     if (!workouts?.length)
@@ -39,6 +60,18 @@ export default function WorkoutSummary({ workouts }) {
     const previousStats = calculateSectionStats(weekGroups.previous)
     const lastStats = calculateSectionStats(lastWorkout)
     const prevStats = calculateSectionStats(prevWorkout)
+
+    // Helper: generate historical data for an exercise
+    const getExerciseHistory = (exerciseName) => {
+        const history = workouts
+            .filter((w) => w.exercises?.name === exerciseName)
+            .map((w) => ({
+                date: w.created_at.slice(0, 10),
+                weight: w.weight,
+            }))
+        // sort by date ascending
+        return history.sort((a, b) => new Date(a.date) - new Date(b.date))
+    }
 
     return (
         <div className="summary-container">
@@ -90,7 +123,6 @@ export default function WorkoutSummary({ workouts }) {
                             </div>
                         </div>
 
-                        {/* Exercise cards instead of table */}
                         <div className="exercise-cards">
                             {Object.entries(data.exercises).map(
                                 ([name, { bestWeight, totalWeight }]) => {
@@ -102,6 +134,43 @@ export default function WorkoutSummary({ workouts }) {
                                             ?.totalWeight || 0
                                     const diffWeek = totalWeight - prevLoad
                                     const diffWorkout = totalWeight - lastLoad
+
+                                    // Historical data for chart
+                                    const history = getExerciseHistory(name)
+                                    const chartData = {
+                                        labels: history.map((h) => h.date),
+                                        datasets: [
+                                            {
+                                                label: 'Best Weight',
+                                                data: history.map(
+                                                    (h) => h.weight
+                                                ),
+                                                fill: false,
+                                                borderColor: '#2e8b57',
+                                                tension: 0.3,
+                                            },
+                                        ],
+                                    }
+
+                                    const chartOptions = {
+                                        responsive: true,
+                                        plugins: { legend: { display: false } },
+                                        scales: {
+                                            x: {
+                                                title: {
+                                                    display: true,
+                                                    text: 'Date',
+                                                },
+                                            },
+                                            y: {
+                                                title: {
+                                                    display: true,
+                                                    text: 'Weight (kg)',
+                                                },
+                                                beginAtZero: true,
+                                            },
+                                        },
+                                    }
 
                                     return (
                                         <div
@@ -149,6 +218,16 @@ export default function WorkoutSummary({ workouts }) {
                                                     kg
                                                 </span>
                                             </div>
+
+                                            {/* Historical graph */}
+                                            {history.length > 1 && (
+                                                <div className="exercise-chart">
+                                                    <Line
+                                                        data={chartData}
+                                                        options={chartOptions}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 }

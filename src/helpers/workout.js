@@ -18,27 +18,53 @@
 // }
 
 // Calculate section stats from workouts
-export function calculateSectionStats(workouts) {
-    if (!workouts || workouts.length === 0) return {}
+// export function calculateSectionStats(workouts) {
+//     if (!workouts || workouts.length === 0) return {}
 
-    // Structure: { type: { totalWeight, exercises: { name: { totalWeight, bestWeight } } } }
+//     // Structure: { type: { totalWeight, exercises: { name: { totalWeight, bestWeight } } } }
+//     const stats = {}
+
+//     workouts.forEach((w) => {
+//         const type = w.exercises?.type || 'Unknown'
+//         const name = w.exercises?.name || 'Unknown Exercise'
+//         const load = (w.reps || 0) * (w.weight || 0)
+//         const weight = w.weight || 0
+
+//         if (!stats[type]) stats[type] = { totalWeight: 0, exercises: {} }
+//         stats[type].totalWeight += load
+
+//         if (!stats[type].exercises[name])
+//             stats[type].exercises[name] = { totalWeight: 0, bestWeight: 0 }
+
+//         stats[type].exercises[name].totalWeight += load
+//         if (weight > stats[type].exercises[name].bestWeight)
+//             stats[type].exercises[name].bestWeight = weight
+//     })
+
+//     return stats
+// }
+
+export function calculateSectionStats(workouts) {
     const stats = {}
 
     workouts.forEach((w) => {
         const type = w.exercises?.type || 'Unknown'
-        const name = w.exercises?.name || 'Unknown Exercise'
-        const load = (w.reps || 0) * (w.weight || 0)
-        const weight = w.weight || 0
+        const name = w.exercises?.name || 'Unknown'
 
         if (!stats[type]) stats[type] = { totalWeight: 0, exercises: {} }
-        stats[type].totalWeight += load
 
-        if (!stats[type].exercises[name])
+        const weightForSet = (w.reps || 0) * (w.weight || 0)
+        stats[type].totalWeight += weightForSet
+
+        if (!stats[type].exercises[name]) {
             stats[type].exercises[name] = { totalWeight: 0, bestWeight: 0 }
+        }
 
-        stats[type].exercises[name].totalWeight += load
-        if (weight > stats[type].exercises[name].bestWeight)
-            stats[type].exercises[name].bestWeight = weight
+        stats[type].exercises[name].totalWeight += weightForSet
+        stats[type].exercises[name].bestWeight = Math.max(
+            stats[type].exercises[name].bestWeight,
+            w.weight || 0
+        )
     })
 
     return stats
