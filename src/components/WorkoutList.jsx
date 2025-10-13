@@ -113,8 +113,6 @@ export default function WorkoutList({
                                                                                     w.weight
                                                                                 }{' '}
                                                                                 kg
-                                                                                {!hideDate &&
-                                                                                    ` — ${date}`}
                                                                             </span>
                                                                             {hideDate && (
                                                                                 <div className="flex gap-2">

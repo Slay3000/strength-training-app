@@ -1,46 +1,162 @@
 import { calculateSectionStats } from '../helpers/workout'
-import React from 'react'
+import './WorkoutSummary.css'
 
 export default function WorkoutSummary({ workouts }) {
-    const stats = calculateSectionStats(workouts)
+    if (!workouts?.length)
+        return <div className="summary-container">No workouts yet.</div>
+
+    const getWeekNumber = (date) => {
+        const d = new Date(date)
+        const oneJan = new Date(d.getFullYear(), 0, 1)
+        const numberOfDays = Math.floor((d - oneJan) / (24 * 60 * 60 * 1000))
+        return Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7)
+    }
+
+    const currentWeek = getWeekNumber(new Date())
+    const weekGroups = workouts.reduce(
+        (acc, w) => {
+            const week = getWeekNumber(w.created_at)
+            if (week === currentWeek) acc.current.push(w)
+            else if (week === currentWeek - 1) acc.previous.push(w)
+            return acc
+        },
+        { current: [], previous: [] }
+    )
+
+    const latestDate = workouts[0]?.created_at?.slice(0, 10)
+    const prevWorkoutDate = workouts
+        .map((w) => w.created_at.slice(0, 10))
+        .filter((d) => d !== latestDate)[0]
+
+    const lastWorkout = workouts.filter(
+        (w) => w.created_at.slice(0, 10) === latestDate
+    )
+    const prevWorkout = workouts.filter(
+        (w) => w.created_at.slice(0, 10) === prevWorkoutDate
+    )
+
+    const currentStats = calculateSectionStats(weekGroups.current)
+    const previousStats = calculateSectionStats(weekGroups.previous)
+    const lastStats = calculateSectionStats(lastWorkout)
+    const prevStats = calculateSectionStats(prevWorkout)
 
     return (
-        <div className="workout-summary">
-            <table className="summary-table">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Total Weight</th>
-                        <th>Weight-to-Go</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {Object.entries(stats).map(
-                        ([type, { totalWeight, weightToGo }]) => {
-                            const typeClass = type.toLowerCase() || 'unknown'
-                            return (
-                                <tr
-                                    key={type}
-                                    className={`type-row ${typeClass}`}
+        <div className="summary-container">
+            {Object.entries(currentStats).map(([type, data]) => {
+                const sectionPrevWeek = previousStats[type]?.totalWeight || 0
+                const sectionPrevWorkout = prevStats[type]?.totalWeight || 0
+                const sectionDiffWeek = data.totalWeight - sectionPrevWeek
+                const sectionDiffWorkout = data.totalWeight - sectionPrevWorkout
+
+                return (
+                    <div key={type} className="summary-section">
+                        <div className="section-header-row">
+                            <h3 className="section-header">{type}</h3>
+                            <div className="section-totals">
+                                <span>
+                                    Total Load:{' '}
+                                    <strong>{data.totalWeight} kg</strong>
+                                </span>
+                                <span
+                                    className={
+                                        sectionDiffWeek > 0
+                                            ? 'positive'
+                                            : sectionDiffWeek < 0
+                                            ? 'negative'
+                                            : 'neutral'
+                                    }
                                 >
-                                    <td className="type-name">{type}</td>
-                                    <td>{totalWeight} kg</td>
-                                    <td
-                                        className={`weight-to-go ${
-                                            weightToGo >= 0
-                                                ? 'positive'
-                                                : 'negative'
-                                        }`}
-                                    >
-                                        {weightToGo >= 0 ? '+' : ''}
-                                        {weightToGo} kg
-                                    </td>
-                                </tr>
-                            )
-                        }
-                    )}
-                </tbody>
-            </table>
+                                    Week Δ:{' '}
+                                    {sectionDiffWeek > 0
+                                        ? `+${sectionDiffWeek}`
+                                        : sectionDiffWeek}{' '}
+                                    kg
+                                </span>
+                                <span
+                                    className={
+                                        sectionDiffWorkout > 0
+                                            ? 'positive'
+                                            : sectionDiffWorkout < 0
+                                            ? 'negative'
+                                            : 'neutral'
+                                    }
+                                >
+                                    Workout Δ:{' '}
+                                    {sectionDiffWorkout > 0
+                                        ? `+${sectionDiffWorkout}`
+                                        : sectionDiffWorkout}{' '}
+                                    kg
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Exercise cards instead of table */}
+                        <div className="exercise-cards">
+                            {Object.entries(data.exercises).map(
+                                ([name, { bestWeight, totalWeight }]) => {
+                                    const prevLoad =
+                                        previousStats[type]?.exercises?.[name]
+                                            ?.totalWeight || 0
+                                    const lastLoad =
+                                        prevStats[type]?.exercises?.[name]
+                                            ?.totalWeight || 0
+                                    const diffWeek = totalWeight - prevLoad
+                                    const diffWorkout = totalWeight - lastLoad
+
+                                    return (
+                                        <div
+                                            key={name}
+                                            className="exercise-card"
+                                        >
+                                            <div className="exercise-name">
+                                                {name}
+                                            </div>
+                                            <div className="exercise-info">
+                                                <span>
+                                                    Best: {bestWeight} kg
+                                                </span>
+                                                <span>
+                                                    Total: {totalWeight} kg
+                                                </span>
+                                                <span
+                                                    className={
+                                                        diffWeek > 0
+                                                            ? 'positive'
+                                                            : diffWeek < 0
+                                                            ? 'negative'
+                                                            : 'neutral'
+                                                    }
+                                                >
+                                                    Δ Week:{' '}
+                                                    {diffWeek > 0
+                                                        ? `+${diffWeek}`
+                                                        : diffWeek}{' '}
+                                                    kg
+                                                </span>
+                                                <span
+                                                    className={
+                                                        diffWorkout > 0
+                                                            ? 'positive'
+                                                            : diffWorkout < 0
+                                                            ? 'negative'
+                                                            : 'neutral'
+                                                    }
+                                                >
+                                                    Δ Last:{' '}
+                                                    {diffWorkout > 0
+                                                        ? `+${diffWorkout}`
+                                                        : diffWorkout}{' '}
+                                                    kg
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )
+                                }
+                            )}
+                        </div>
+                    </div>
+                )
+            })}
         </div>
     )
 }

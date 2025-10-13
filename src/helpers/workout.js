@@ -1,62 +1,106 @@
 // helpers/workout.js
 
-/**
- * Groups workouts by date, then by exercise type
- * @param {Array} workouts - Array of workout objects with exercises info
- * @returns {Object} - { date: { type: [workouts] } }
- */
-export function groupWorkouts(workouts) {
-    const byDate = {}
+//     const byDate = {}
 
-    workouts.forEach((w) => {
-        const date = new Date(w.created_at).toLocaleDateString()
-        const type = w.exercises?.type || 'Unknown'
-        const name = w.exercises?.name || 'Unknown'
+//     workouts.forEach((w) => {
+//         const date = new Date(w.created_at).toLocaleDateString()
+//         const type = w.exercises?.type || 'Unknown'
+//         const name = w.exercises?.name || 'Unknown'
 
-        if (!byDate[date]) byDate[date] = {}
-        if (!byDate[date][type]) byDate[date][type] = {}
-        if (!byDate[date][type][name]) byDate[date][type][name] = []
+//         if (!byDate[date]) byDate[date] = {}
+//         if (!byDate[date][type]) byDate[date][type] = {}
+//         if (!byDate[date][type][name]) byDate[date][type][name] = []
 
-        byDate[date][type][name].push(w)
-    })
+//         byDate[date][type][name].push(w)
+//     })
 
-    return byDate
-}
+//     return byDate
+// }
 
+// Calculate section stats from workouts
 export function calculateSectionStats(workouts) {
-    const allTypes = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms']
+    if (!workouts || workouts.length === 0) return {}
+
+    // Structure: { type: { totalWeight, exercises: { name: { totalWeight, bestWeight } } } }
     const stats = {}
 
-    // Group workouts by type and date
-    const grouped = {}
-    allTypes.forEach((t) => (grouped[t] = {}))
-
     workouts.forEach((w) => {
         const type = w.exercises?.type || 'Unknown'
-        const date = new Date(w.created_at).toISOString().split('T')[0] // YYYY-MM-DD
-        const lifted = (w.reps || 0) * (w.weight || 0)
-        if (!grouped[type][date]) grouped[type][date] = 0
-        grouped[type][date] += lifted
-    })
+        const name = w.exercises?.name || 'Unknown Exercise'
+        const load = (w.reps || 0) * (w.weight || 0)
+        const weight = w.weight || 0
 
-    // Compute stats
-    allTypes.forEach((type) => {
-        const dates = Object.keys(grouped[type]).sort() // ascending
-        if (dates.length === 0) {
-            stats[type] = { totalWeight: 0, weightToGo: 0 }
-            return
-        }
+        if (!stats[type]) stats[type] = { totalWeight: 0, exercises: {} }
+        stats[type].totalWeight += load
 
-        const latestDate = dates[dates.length - 1]
-        const totalWeight = grouped[type][latestDate]
-        const prevWeight =
-            dates.length >= 2 ? grouped[type][dates[dates.length - 2]] : 0
+        if (!stats[type].exercises[name])
+            stats[type].exercises[name] = { totalWeight: 0, bestWeight: 0 }
 
-        stats[type] = {
-            totalWeight,
-            weightToGo: totalWeight - prevWeight,
-        }
+        stats[type].exercises[name].totalWeight += load
+        if (weight > stats[type].exercises[name].bestWeight)
+            stats[type].exercises[name].bestWeight = weight
     })
 
     return stats
+}
+
+// Optional: group workouts by date -> type -> exercise
+export function groupWorkouts(workouts) {
+    const grouped = {}
+    workouts.forEach((w) => {
+        const date = new Date(w.created_at).toLocaleDateString()
+        const type = w.exercises?.type || 'Unknown'
+        const name = w.exercises?.name || 'Unknown Exercise'
+
+        if (!grouped[date]) grouped[date] = {}
+        if (!grouped[date][type]) grouped[date][type] = {}
+        if (!grouped[date][type][name]) grouped[date][type][name] = []
+
+        grouped[date][type][name].push(w)
+    })
+    return grouped
+}
+
+export function calculateWeeklyStats(workouts) {
+    const now = new Date()
+    const oneWeekAgo = new Date(now)
+    oneWeekAgo.setDate(now.getDate() - 7)
+    const twoWeeksAgo = new Date(now)
+    twoWeeksAgo.setDate(now.getDate() - 14)
+
+    const currentWeek = workouts.filter(
+        (w) => new Date(w.created_at) >= oneWeekAgo
+    )
+    const previousWeek = workouts.filter(
+        (w) =>
+            new Date(w.created_at) >= twoWeeksAgo &&
+            new Date(w.created_at) < oneWeekAgo
+    )
+
+    return {
+        currentWeekStats: calculateSectionStats(currentWeek),
+        previousWeekStats: calculateSectionStats(previousWeek),
+    }
+}
+
+export function calculateWeightGoals(workouts) {
+    const bests = {}
+
+    workouts.forEach((w) => {
+        const type = w.exercises?.type || 'Unknown'
+        const name = w.exercises?.name || 'Unnamed'
+        const total = w.reps * w.weight
+
+        if (!bests[type]) bests[type] = { best: 0, exercises: {} }
+        if (!bests[type].exercises[name])
+            bests[type].exercises[name] = { best: 0 }
+
+        bests[type].best = Math.max(bests[type].best, total)
+        bests[type].exercises[name].best = Math.max(
+            bests[type].exercises[name].best,
+            total
+        )
+    })
+
+    return bests
 }

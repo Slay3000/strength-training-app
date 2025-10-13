@@ -99,11 +99,6 @@ export default function App() {
             if (error) console.error(error)
             else setWorkouts([data[0], ...workouts])
         }
-
-        // Reset form
-        setExerciseId('')
-        setReps('')
-        setWeight('')
     }
 
     // Delete workout

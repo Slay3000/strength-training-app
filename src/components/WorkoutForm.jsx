@@ -9,11 +9,10 @@ export default function WorkoutForm({
     weight,
     setWeight,
     onAdd,
-    hiddenExercises = [],
+    hiddenExercises,
 }) {
     const [exercises, setExercises] = useState([])
 
-    // Fetch exercises from DB
     useEffect(() => {
         async function fetchExercises() {
             const { data, error } = await supabase
@@ -21,29 +20,32 @@ export default function WorkoutForm({
                 .select('*')
                 .order('type', { ascending: true })
                 .order('name', { ascending: true })
-
             if (error) console.error(error)
-            else setExercises(data)
+            else setExercises(data || [])
         }
-
         fetchExercises()
     }, [])
 
     // Group exercises by type
-    const groupedExercises = exercises.reduce((acc, ex) => {
+    const grouped = exercises.reduce((acc, ex) => {
         if (!acc[ex.type]) acc[ex.type] = []
         acc[ex.type].push(ex)
         return acc
     }, {})
 
+    const repsOptions = [5, 8, 10, 12, 15, 20, 25, 30]
+    const weightOptions = [5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100]
+
     return (
         <div className="workout-form">
+            {/* Exercise select */}
             <select
                 value={exerciseId}
                 onChange={(e) => setExerciseId(e.target.value)}
+                className="exercise-select"
             >
                 <option value="">Select Exercise</option>
-                {Object.entries(groupedExercises).map(([type, exs]) => (
+                {Object.entries(grouped).map(([type, exs]) => (
                     <optgroup key={type} label={type}>
                         {exs
                             .filter((ex) => !hiddenExercises.includes(ex.id))
@@ -56,23 +58,37 @@ export default function WorkoutForm({
                 ))}
             </select>
 
+            {/* Reps input with presets */}
             <input
+                type="number"
+                list="reps-options"
                 value={reps}
                 onChange={(e) => setReps(e.target.value)}
-                type="number"
+                className="reps-input"
                 placeholder="Reps"
-                className="workout-form-input"
             />
+            <datalist id="reps-options">
+                {repsOptions.map((r) => (
+                    <option key={r} value={r} />
+                ))}
+            </datalist>
 
+            {/* Weight input with presets */}
             <input
+                type="number"
+                list="weight-options"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                type="number"
-                placeholder="Weight"
-                className="workout-form-input"
+                className="weight-input"
+                placeholder="Weight (kg)"
             />
+            <datalist id="weight-options">
+                {weightOptions.map((w) => (
+                    <option key={w} value={w} />
+                ))}
+            </datalist>
 
-            <button onClick={onAdd} className="workout-form-button">
+            <button onClick={onAdd} className="add-button">
                 Add
             </button>
         </div>
