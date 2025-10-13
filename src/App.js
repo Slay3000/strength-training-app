@@ -163,6 +163,12 @@ export default function App() {
         )
     }
 
+    const todayWorkouts = workouts.filter((w) => {
+        const today = new Date().toISOString().split('T')[0]
+        const workoutDate = new Date(w.created_at).toISOString().split('T')[0]
+        return workoutDate === today
+    })
+
     return (
         <div className="app-container">
             {/* Tabs */}
@@ -212,14 +218,22 @@ export default function App() {
                             onAdd={handleAddOrEdit}
                             hiddenExercises={hiddenExercises}
                         />
-                        <WorkoutList
-                            workouts={workouts}
-                            onDelete={handleDelete}
-                            onEdit={handleEdit}
-                            hideDate={true}
-                        />
+
+                        {todayWorkouts.length > 0 ? (
+                            <WorkoutList
+                                workouts={todayWorkouts}
+                                onDelete={handleDelete}
+                                onEdit={handleEdit}
+                                hideDate={true}
+                            />
+                        ) : (
+                            <p className="no-workouts">
+                                No workouts yet today.
+                            </p>
+                        )}
                     </>
                 )}
+
                 {tab === 'history' && (
                     <WorkoutList workouts={workouts} onDelete={handleDelete} />
                 )}
