@@ -6,6 +6,7 @@ export default function WorkoutList({
     onDelete,
     onEdit,
     hideDate = false,
+    prevStats = { sections: {}, exercises: {} },
 }) {
     const grouped = groupWorkouts(workouts)
     const [collapsedDates, setCollapsedDates] = useState({})
@@ -48,6 +49,12 @@ export default function WorkoutList({
                         {!collapsedDates[date] &&
                             Object.entries(types).map(([type, exercises]) => {
                                 const typeKey = `${date}-${type}`
+                                const sectionPrev =
+                                    prevStats.sections[type]?.prevTotalWeight ||
+                                    0
+                                const sectionLoadToGo =
+                                    prevStats.sections[type]?.loadToGo || 0
+
                                 return (
                                     <div key={typeKey} className="type-card">
                                         <div
@@ -63,9 +70,86 @@ export default function WorkoutList({
                                         </div>
 
                                         {!collapsedTypes[typeKey] &&
+                                            hideDate && (
+                                                <div className="type-stats stats-row">
+                                                    <div className="stats-block">
+                                                        <strong>
+                                                            Previous Load
+                                                        </strong>
+                                                        {sectionPrev} kg
+                                                    </div>
+                                                    <div
+                                                        className={`stats-block ${
+                                                            sectionLoadToGo > 0
+                                                                ? 'red-positive'
+                                                                : sectionLoadToGo <
+                                                                  0
+                                                                ? 'green-negative'
+                                                                : 'neutral'
+                                                        }`}
+                                                    >
+                                                        <strong>
+                                                            Load To Go
+                                                        </strong>
+                                                        {sectionLoadToGo > 0
+                                                            ? `+${sectionLoadToGo}`
+                                                            : sectionLoadToGo}{' '}
+                                                        kg
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                        {!collapsedTypes[typeKey] &&
                                             Object.entries(exercises).map(
                                                 ([name, sets]) => {
                                                     const exKey = `${date}-${type}-${name}`
+                                                    const exercisePrev =
+                                                        prevStats.exercises[
+                                                            name
+                                                        ]?.prevTotalWeight || 0
+                                                    const exerciseLoadToGo =
+                                                        prevStats.exercises[
+                                                            name
+                                                        ]?.loadToGo || 0
+                                                    const lastMaxWeight =
+                                                        prevStats.exercises[
+                                                            name
+                                                        ]?.lastMaxWeight || 0
+
+                                                    const totalWeight =
+                                                        sets.reduce(
+                                                            (sum, s) =>
+                                                                sum +
+                                                                (s.weight ||
+                                                                    0) *
+                                                                    (s.reps ||
+                                                                        0),
+                                                            0
+                                                        )
+                                                    const totalReps =
+                                                        sets.reduce(
+                                                            (sum, s) =>
+                                                                sum +
+                                                                (s.reps || 0),
+                                                            0
+                                                        )
+                                                    const bestSet = sets.reduce(
+                                                        (max, s) =>
+                                                            Math.max(
+                                                                max,
+                                                                (s.weight ||
+                                                                    0) *
+                                                                    (s.reps ||
+                                                                        0)
+                                                            ),
+                                                        0
+                                                    )
+
+                                                    // Adjust load-to-go sign
+                                                    const displayLoadToGo =
+                                                        exerciseLoadToGo -
+                                                        totalWeight
+
                                                     return (
                                                         <div
                                                             key={exKey}
@@ -94,52 +178,135 @@ export default function WorkoutList({
                                                             ] &&
                                                                 Array.isArray(
                                                                     sets
-                                                                ) &&
-                                                                sets.map(
-                                                                    (w) => (
-                                                                        <div
-                                                                            key={
-                                                                                w.id
-                                                                            }
-                                                                            className="workout-item-card"
-                                                                        >
-                                                                            <span>
-                                                                                {
-                                                                                    w.reps
-                                                                                }{' '}
-                                                                                reps
-                                                                                @{' '}
-                                                                                {
-                                                                                    w.weight
-                                                                                }{' '}
-                                                                                kg
-                                                                            </span>
-                                                                            {hideDate && (
-                                                                                <div className="flex gap-2">
-                                                                                    <button
-                                                                                        onClick={() =>
-                                                                                            onEdit(
-                                                                                                w
-                                                                                            )
-                                                                                        }
-                                                                                        className="edit-button"
-                                                                                    >
-                                                                                        Edit
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={() =>
-                                                                                            onDelete(
-                                                                                                w.id
-                                                                                            )
-                                                                                        }
-                                                                                        className="delete-button"
-                                                                                    >
-                                                                                        Delete
-                                                                                    </button>
+                                                                ) && (
+                                                                    <>
+                                                                        {sets.map(
+                                                                            (
+                                                                                w
+                                                                            ) => (
+                                                                                <div
+                                                                                    key={
+                                                                                        w.id
+                                                                                    }
+                                                                                    className="workout-item-card"
+                                                                                >
+                                                                                    <span>
+                                                                                        {
+                                                                                            w.reps
+                                                                                        }{' '}
+                                                                                        reps
+                                                                                        @{' '}
+                                                                                        {
+                                                                                            w.weight
+                                                                                        }{' '}
+                                                                                        kg
+                                                                                    </span>
+                                                                                    {hideDate && (
+                                                                                        <div className="flex gap-2">
+                                                                                            <button
+                                                                                                onClick={() =>
+                                                                                                    onEdit(
+                                                                                                        w
+                                                                                                    )
+                                                                                                }
+                                                                                                className="edit-button"
+                                                                                            >
+                                                                                                Edit
+                                                                                            </button>
+                                                                                            <button
+                                                                                                onClick={() =>
+                                                                                                    onDelete(
+                                                                                                        w.id
+                                                                                                    )
+                                                                                                }
+                                                                                                className="delete-button"
+                                                                                            >
+                                                                                                Delete
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    )}
                                                                                 </div>
-                                                                            )}
-                                                                        </div>
-                                                                    )
+                                                                            )
+                                                                        )}
+
+                                                                        {/* Exercise stats */}
+                                                                        {hideDate && (
+                                                                            <div className="exercise-stats stats-row">
+                                                                                <div className="stats-block">
+                                                                                    <strong>
+                                                                                        Previous
+                                                                                        Load
+                                                                                    </strong>
+                                                                                    {
+                                                                                        exercisePrev
+                                                                                    }{' '}
+                                                                                    kg
+                                                                                </div>
+                                                                                <div
+                                                                                    className={`stats-block ${
+                                                                                        displayLoadToGo >
+                                                                                        0
+                                                                                            ? 'red-positive'
+                                                                                            : displayLoadToGo <
+                                                                                              0
+                                                                                            ? 'green-negative'
+                                                                                            : 'neutral'
+                                                                                    }`}
+                                                                                >
+                                                                                    <strong>
+                                                                                        Load
+                                                                                        To
+                                                                                        Go
+                                                                                    </strong>
+                                                                                    {displayLoadToGo >
+                                                                                    0
+                                                                                        ? `+${displayLoadToGo}`
+                                                                                        : displayLoadToGo}{' '}
+                                                                                    kg
+                                                                                </div>
+                                                                                <div className="stats-block">
+                                                                                    <strong>
+                                                                                        Last
+                                                                                        Max
+                                                                                        Weight
+                                                                                    </strong>
+                                                                                    {
+                                                                                        lastMaxWeight
+                                                                                    }{' '}
+                                                                                    kg
+                                                                                </div>
+                                                                                <div className="stats-block">
+                                                                                    <strong>
+                                                                                        Total
+                                                                                        Weight
+                                                                                    </strong>
+                                                                                    {
+                                                                                        totalWeight
+                                                                                    }{' '}
+                                                                                    kg
+                                                                                </div>
+                                                                                <div className="stats-block">
+                                                                                    <strong>
+                                                                                        Total
+                                                                                        Reps
+                                                                                    </strong>
+                                                                                    {
+                                                                                        totalReps
+                                                                                    }
+                                                                                </div>
+                                                                                <div className="stats-block">
+                                                                                    <strong>
+                                                                                        Best
+                                                                                        Set
+                                                                                    </strong>
+                                                                                    {
+                                                                                        bestSet
+                                                                                    }{' '}
+                                                                                    kg·rep
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </>
                                                                 )}
                                                         </div>
                                                     )

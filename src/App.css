@@ -88,6 +88,18 @@ body {
     min-width: 180px;
 }
 
+.red-positive {
+    color: red;
+}
+
+.green-negative {
+    color: green;
+}
+
+.neutral {
+    color: black;
+}
+
 .reps-input,
 .weight-input {
     width: 90px;
@@ -559,5 +571,170 @@ body {
     }
     .dropdown-menu {
         max-height: 220px;
+    }
+}
+
+/* General container */
+.stats-section {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    background: #fafafa;
+}
+
+/* Section header */
+.stats-section .section-header {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Stats row */
+.stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+/* Individual stat block */
+.stats-block {
+    background: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    min-width: 140px;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Load-to-go colors */
+.red-positive {
+    color: red;
+}
+
+.green-negative {
+    color: green;
+}
+
+.neutral {
+    color: black;
+}
+
+/* Exercise cards */
+.exercise-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 12px;
+    background: #fff;
+}
+
+/* Exercise header */
+.exercise-card .exercise-header {
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+/* Hide load stats on history */
+.history .stats-section .load-stats {
+    display: none;
+}
+
+/* Responsive mobile */
+@media (max-width: 600px) {
+    .stats-row {
+        flex-direction: column;
+    }
+    .stats-block {
+        min-width: auto;
+    }
+}
+
+/* ---------- Section / Type Stats ---------- */
+.type-stats {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    background-color: #f1f5f9;
+}
+
+.type-stats .type-header {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.type-stats .section-load {
+    font-size: 0.9rem;
+    color: #334155;
+}
+
+/* ---------- Exercise Stats ---------- */
+.exercise-stats {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 12px;
+    background-color: #ffffff;
+}
+
+.exercise-stats .exercise-header {
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+}
+
+.stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.stats-block {
+    background-color: #f8fafc;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    min-width: 120px;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Load-to-go colors */
+.red-positive {
+    color: red;
+}
+
+.green-negative {
+    color: green;
+}
+
+.neutral {
+    color: black;
+}
+
+/* Hide load stats on history */
+.history .load-stats {
+    display: none;
+}
+
+/* ---------- Mobile Responsive ---------- */
+@media (max-width: 600px) {
+    .stats-row {
+        flex-direction: column;
+    }
+
+    .stats-block {
+        min-width: auto;
     }
 }

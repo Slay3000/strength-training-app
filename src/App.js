@@ -8,41 +8,36 @@ import AddExerciseForm from './components/AddExerciseForm'
 
 import './App.css'
 
-// const USER_ID = '123e4567-e89b-12d3-a456-426614174000'
-
 export default function App() {
     const [workouts, setWorkouts] = useState([])
     const [exerciseId, setExerciseId] = useState('')
     const [reps, setReps] = useState('')
     const [weight, setWeight] = useState('')
-    const [tab, setTab] = useState('current') // current, history, summary, preferences
+    const [tab, setTab] = useState('current')
     const [hiddenExercises, setHiddenExercises] = useState([])
-    const [editingId, setEditingId] = useState(null) // track editing workout
+    const [editingId, setEditingId] = useState(null)
 
-    const [USER_ID, setUserId] = useState(null) // Step 1: store logged-in user ID
+    const [USER_ID, setUserId] = useState(null)
     const [loading, setLoading] = useState(true)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
 
-    // Step 1: get logged-in user on mount
+    // Get logged-in user session
     useEffect(() => {
         async function getUser() {
             const {
                 data: { session },
                 error,
             } = await supabase.auth.getSession()
-            if (error) {
-                console.error(error)
-                setError('Failed to get session.')
-            } else if (session?.user) {
-                setUserId(session.user.id)
-            }
+            if (error) console.error(error)
+            else if (session?.user) setUserId(session.user.id)
             setLoading(false)
         }
         getUser()
     }, [])
 
+    // Fetch workouts when user is ready
     useEffect(() => {
         if (USER_ID) fetchWorkouts()
     }, [USER_ID])
@@ -59,12 +54,11 @@ export default function App() {
         else setWorkouts(data || [])
     }
 
-    // Add or update workout
+    // Add or edit workout
     async function handleAddOrEdit() {
         if (!exerciseId || !reps || !weight) return
 
         if (editingId) {
-            // Update existing workout
             const { data, error } = await supabase
                 .from('workouts')
                 .update({
@@ -83,7 +77,6 @@ export default function App() {
 
             setEditingId(null)
         } else {
-            // Add new workout
             const { data, error } = await supabase
                 .from('workouts')
                 .insert([
@@ -99,22 +92,23 @@ export default function App() {
             if (error) console.error(error)
             else setWorkouts([data[0], ...workouts])
         }
+
+        setReps('')
+        setWeight('')
     }
 
-    // Delete workout
     async function handleDelete(id) {
         const { error } = await supabase.from('workouts').delete().eq('id', id)
         if (error) console.error(error)
         else setWorkouts(workouts.filter((w) => w.id !== id))
     }
 
-    // Edit workout: populate form with selected workout
     function handleEdit(workout) {
         setExerciseId(workout.exercise_id)
         setReps(workout.reps)
         setWeight(workout.weight)
         setEditingId(workout.id)
-        setTab('current') // switch to current tab
+        setTab('current')
     }
 
     const handleLogin = async (e) => {
@@ -129,14 +123,11 @@ export default function App() {
     }
 
     if (loading) return <p>Loading...</p>
-    if (!USER_ID) {
+    if (!USER_ID)
         return (
             <div className="auth-container">
                 <h2>Sign In / Sign Up</h2>
-                <form
-                    onSubmit={handleLogin} // handleLogin for sign-in
-                    className="auth-form"
-                >
+                <form onSubmit={handleLogin} className="auth-form">
                     <input
                         type="email"
                         placeholder="Email"
@@ -156,13 +147,84 @@ export default function App() {
                 {error && <p className="error">{error}</p>}
             </div>
         )
+
+    // inside App.js, before return
+    const todayStr = new Date().toISOString().split('T')[0]
+    const todayWorkouts = workouts.filter(
+        (w) => w.created_at.slice(0, 10) === todayStr
+    )
+
+    // Compute previous stats for both sections and exercises
+    const computePrevStatsBySectionAndExercise = (
+        todayWorkouts,
+        allWorkouts
+    ) => {
+        const prevStats = { sections: {}, exercises: {} }
+        const today = new Date().toISOString().slice(0, 10)
+
+        // Get last workout date before today
+        const previousDates = Array.from(
+            new Set(allWorkouts.map((w) => w.created_at.slice(0, 10)))
+        ).filter((d) => d < today)
+        previousDates.sort()
+        const lastDate = previousDates[previousDates.length - 1]
+        if (!lastDate) return prevStats
+
+        const lastWorkout = allWorkouts.filter(
+            (w) => w.created_at.slice(0, 10) === lastDate
+        )
+
+        lastWorkout.forEach((w) => {
+            const section = w.exercises?.type
+            const name = w.exercises?.name
+            const total = (w.weight || 0) * (w.reps || 0)
+            const maxWeight = w.weight || 0
+
+            // Section stats
+            if (!prevStats.sections[section])
+                prevStats.sections[section] = {
+                    prevTotalWeight: 0,
+                    loadToGo: 0,
+                }
+            prevStats.sections[section].prevTotalWeight += total
+
+            // Exercise stats
+            if (!prevStats.exercises[name])
+                prevStats.exercises[name] = {
+                    prevTotalWeight: 0,
+                    loadToGo: 0,
+                    lastMaxWeight: 0,
+                }
+            prevStats.exercises[name].prevTotalWeight += total
+            prevStats.exercises[name].lastMaxWeight = Math.max(
+                prevStats.exercises[name].lastMaxWeight,
+                maxWeight
+            )
+        })
+
+        // Reduce load-to-go based on today's workouts
+        todayWorkouts.forEach((w) => {
+            const section = w.exercises?.type
+            const name = w.exercises?.name
+            const totalToday = (w.weight || 0) * (w.reps || 0)
+
+            if (prevStats.sections[section])
+                prevStats.sections[section].loadToGo =
+                    prevStats.sections[section].prevTotalWeight - totalToday
+
+            if (prevStats.exercises[name])
+                prevStats.exercises[name].loadToGo =
+                    prevStats.exercises[name].prevTotalWeight - totalToday
+        })
+
+        return prevStats
     }
 
-    const todayWorkouts = workouts.filter((w) => {
-        const today = new Date().toISOString().split('T')[0]
-        const workoutDate = new Date(w.created_at).toISOString().split('T')[0]
-        return workoutDate === today
-    })
+    // Call it
+    const prevStatsBySectionAndExercise = computePrevStatsBySectionAndExercise(
+        todayWorkouts,
+        workouts
+    )
 
     return (
         <div className="app-container">
@@ -213,19 +275,13 @@ export default function App() {
                             onAdd={handleAddOrEdit}
                             hiddenExercises={hiddenExercises}
                         />
-
-                        {todayWorkouts.length > 0 ? (
-                            <WorkoutList
-                                workouts={todayWorkouts}
-                                onDelete={handleDelete}
-                                onEdit={handleEdit}
-                                hideDate={true}
-                            />
-                        ) : (
-                            <p className="no-workouts">
-                                No workouts yet today.
-                            </p>
-                        )}
+                        <WorkoutList
+                            workouts={todayWorkouts}
+                            onDelete={handleDelete}
+                            onEdit={handleEdit}
+                            hideDate={true}
+                            prevStats={prevStatsBySectionAndExercise} // <-- both section & exercise stats
+                        />
                     </>
                 )}
 

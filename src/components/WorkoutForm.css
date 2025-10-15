@@ -1,0 +1,183 @@
+/* WorkoutForm.css
+   Styles for exercise input + grouped dropdown, reps/weight inputs and Add button.
+   Place in src/components/WorkoutForm.css and ensure WorkoutForm.jsx imports it:
+   import './WorkoutForm.css'
+*/
+
+/* Container */
+.workout-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: #fafafa;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(2, 6, 23, 0.06);
+    margin-bottom: 16px;
+}
+
+/* ---------- Exercise input + dropdown ---------- */
+.exercise-select-container {
+    position: relative;
+    width: 260px; /* desktop width */
+    min-width: 180px;
+    z-index: 40;
+}
+
+.exercise-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.exercise-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12);
+}
+
+/* Dropdown list */
+.dropdown-list {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    max-height: 280px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #e6eef7;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+    padding: 8px;
+}
+
+/* When there are no results */
+.dropdown-empty {
+    padding: 10px;
+    color: #6b7280;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Group header (type) */
+.dropdown-group {
+    padding: 6px 6px;
+    border-radius: 6px;
+}
+
+.dropdown-type {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 6px 4px;
+    padding: 2px 4px;
+}
+
+/* Individual exercise item */
+.dropdown-item {
+    padding: 8px 10px;
+    margin: 4px 2px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: block;
+    font-size: 14px;
+    color: #111827;
+    transition: background-color 0.12s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f5f9;
+}
+
+/* selected item highlight */
+.dropdown-item.selected {
+    background: linear-gradient(
+        90deg,
+        rgba(79, 70, 229, 0.06),
+        rgba(59, 130, 246, 0.03)
+    );
+    border: 1px solid rgba(79, 70, 229, 0.12);
+}
+
+/* ---------- Reps & Weight inputs ---------- */
+.reps-input,
+.weight-input {
+    width: 100px;
+    min-width: 80px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    text-align: center;
+    background: #fff;
+}
+
+.reps-input:focus,
+.weight-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.08);
+}
+
+/* ---------- Add button ---------- */
+.add-button {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: none;
+    background-color: #2563eb;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.12);
+    transition: transform 0.08s ease, background-color 0.12s ease;
+}
+
+.add-button:hover {
+    background-color: #1e40af;
+    transform: translateY(-1px);
+}
+.add-button:active {
+    transform: translateY(0);
+}
+
+/* ---------- Responsive / mobile ---------- */
+@media (max-width: 760px) {
+    .workout-form {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 10px;
+    }
+
+    .exercise-select-container {
+        width: 100%;
+    }
+
+    .reps-input,
+    .weight-input {
+        width: 100%;
+    }
+
+    .add-button {
+        width: 100%;
+    }
+
+    .dropdown-list {
+        max-height: 220px;
+    }
+}
+
+/* Slight scrollbar styling for desktop */
+.dropdown-list::-webkit-scrollbar {
+    width: 8px;
+}
+.dropdown-list::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.08);
+    border-radius: 8px;
+}

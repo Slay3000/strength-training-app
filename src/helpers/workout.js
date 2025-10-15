@@ -130,3 +130,17 @@ export function calculateWeightGoals(workouts) {
 
     return bests
 }
+
+// Group workouts by type -> exercises -> sets (for current day)
+export function groupWorkoutsByType(workouts) {
+    return workouts.reduce((acc, w) => {
+        const type = w.exercises?.type || 'Unknown'
+        const name = w.exercises?.name || 'Unknown'
+
+        if (!acc[type]) acc[type] = {}
+        if (!acc[type][name]) acc[type][name] = []
+
+        acc[type][name].push(w)
+        return acc
+    }, {})
+}

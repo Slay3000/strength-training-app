@@ -1,22 +1,24 @@
-import { calculateSectionStats } from '../helpers/workout'
-import { Line } from 'react-chartjs-2'
+import { Line, Bar } from 'react-chartjs-2'
 import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
     PointElement,
+    BarElement,
     LineElement,
     Title,
     Tooltip,
     Legend,
 } from 'chart.js'
 import './WorkoutSummary.css'
+import { calculateSectionStats } from '../helpers/workout'
 
 ChartJS.register(
     CategoryScale,
     LinearScale,
     PointElement,
     LineElement,
+    BarElement,
     Title,
     Tooltip,
     Legend
@@ -26,60 +28,125 @@ export default function WorkoutSummary({ workouts }) {
     if (!workouts?.length)
         return <div className="summary-container">No workouts yet.</div>
 
-    const getWeekNumber = (date) => {
-        const d = new Date(date)
-        const oneJan = new Date(d.getFullYear(), 0, 1)
-        const numberOfDays = Math.floor((d - oneJan) / (24 * 60 * 60 * 1000))
-        return Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7)
+    const todayStr = new Date().toISOString().slice(0, 10)
+    const todayWorkouts = workouts.filter(
+        (w) => w.created_at.slice(0, 10) === todayStr
+    )
+
+    // Get start of week and month
+    const now = new Date()
+    const weekStart = new Date(now)
+    weekStart.setDate(now.getDate() - now.getDay())
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    const weekWorkouts = workouts.filter(
+        (w) => new Date(w.created_at) >= weekStart
+    )
+    const monthWorkouts = workouts.filter(
+        (w) => new Date(w.created_at) >= monthStart
+    )
+
+    // Calculate stats
+    const todayStats = calculateSectionStats(todayWorkouts)
+    const weekStats = calculateSectionStats(weekWorkouts)
+    const monthStats = calculateSectionStats(monthWorkouts)
+
+    const sections = Object.keys(todayStats)
+
+    const createBarData = (statsObj) => {
+        return {
+            labels: Object.keys(statsObj),
+            datasets: [
+                {
+                    label: 'Total Load',
+                    data: Object.values(statsObj).map((s) => s.totalWeight),
+                    backgroundColor: [
+                        '#f87171', // Chest
+                        '#60a5fa', // Back
+                        '#34d399', // Legs
+                        '#facc15', // Shoulders
+                        '#a78bfa', // Arms
+                        '#d1d5db', // Unknown
+                    ],
+                },
+            ],
+        }
     }
 
-    const currentWeek = getWeekNumber(new Date())
-    const weekGroups = workouts.reduce(
-        (acc, w) => {
-            const week = getWeekNumber(w.created_at)
-            if (week === currentWeek) acc.current.push(w)
-            else if (week === currentWeek - 1) acc.previous.push(w)
-            return acc
+    const barOptions = (title) => ({
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            title: { display: true, text: title },
         },
-        { current: [], previous: [] }
-    )
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Load (kg)' },
+            },
+            x: { title: { display: true, text: 'Section' } },
+        },
+    })
 
-    const latestDate = workouts[0]?.created_at?.slice(0, 10)
-    const prevWorkoutDate = workouts
-        .map((w) => w.created_at.slice(0, 10))
-        .filter((d) => d !== latestDate)[0]
-
-    const lastWorkout = workouts.filter(
-        (w) => w.created_at.slice(0, 10) === latestDate
-    )
-    const prevWorkout = workouts.filter(
-        (w) => w.created_at.slice(0, 10) === prevWorkoutDate
-    )
-
-    const currentStats = calculateSectionStats(weekGroups.current)
-    const previousStats = calculateSectionStats(weekGroups.previous)
-    const lastStats = calculateSectionStats(lastWorkout)
-    const prevStats = calculateSectionStats(prevWorkout)
-
-    // Helper: generate historical data for an exercise
+    // Exercise history for line charts
     const getExerciseHistory = (exerciseName) => {
-        const history = workouts
-            .filter((w) => w.exercises?.name === exerciseName)
-            .map((w) => ({
-                date: w.created_at.slice(0, 10),
-                weight: w.weight,
-            }))
-        // sort by date ascending
-        return history.sort((a, b) => new Date(a.date) - new Date(b.date))
+        const dailyMap = {}
+        workouts.forEach((w) => {
+            if (w.exercises?.name !== exerciseName) return
+            const day = w.created_at.slice(0, 10)
+            const total = (w.weight || 0) * (w.reps || 0)
+            if (!dailyMap[day]) dailyMap[day] = 0
+            dailyMap[day] += total
+        })
+        return Object.entries(dailyMap)
+            .map(([date, totalWeight]) => ({ date, totalWeight }))
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
+    }
+
+    // Section history for line charts
+    const getSectionHistory = (sectionName) => {
+        const dailyMap = {}
+        workouts.forEach((w) => {
+            if (w.exercises?.type !== sectionName) return
+            const day = w.created_at.slice(0, 10)
+            const total = (w.weight || 0) * (w.reps || 0)
+            if (!dailyMap[day]) dailyMap[day] = 0
+            dailyMap[day] += total
+        })
+        return Object.entries(dailyMap)
+            .map(([date, totalWeight]) => ({ date, totalWeight }))
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
     }
 
     return (
         <div className="summary-container">
-            {Object.entries(currentStats).map(([type, data]) => {
-                const sectionPrevWeek = previousStats[type]?.totalWeight || 0
-                const sectionPrevWorkout = prevStats[type]?.totalWeight || 0
-                const sectionDiffWeek = data.totalWeight - sectionPrevWeek
-                const sectionDiffWorkout = data.totalWeight - sectionPrevWorkout
+            {/* Daily, weekly, monthly section bar charts */}
+            {sections.length > 0 && (
+                <>
+                    <div className="bar-chart-container">
+                        <Bar
+                            data={createBarData(todayStats)}
+                            options={barOptions('Today Section Load (kg)')}
+                        />
+                    </div>
+                    <div className="bar-chart-container">
+                        <Bar
+                            data={createBarData(weekStats)}
+                            options={barOptions('This Week Section Load (kg)')}
+                        />
+                    </div>
+                    <div className="bar-chart-container">
+                        <Bar
+                            data={createBarData(monthStats)}
+                            options={barOptions('This Month Section Load (kg)')}
+                        />
+                    </div>
+                </>
+            )}
+
+            {/* Section and exercise details */}
+            {Object.entries(todayStats).map(([type, data]) => {
+                const sectionHistory = getSectionHistory(type)
 
                 return (
                     <div key={type} className="summary-section">
@@ -90,63 +157,25 @@ export default function WorkoutSummary({ workouts }) {
                                     Total Load:{' '}
                                     <strong>{data.totalWeight} kg</strong>
                                 </span>
-                                <span
-                                    className={
-                                        sectionDiffWeek > 0
-                                            ? 'positive'
-                                            : sectionDiffWeek < 0
-                                            ? 'negative'
-                                            : 'neutral'
-                                    }
-                                >
-                                    Week Δ:{' '}
-                                    {sectionDiffWeek > 0
-                                        ? `+${sectionDiffWeek}`
-                                        : sectionDiffWeek}{' '}
-                                    kg
-                                </span>
-                                <span
-                                    className={
-                                        sectionDiffWorkout > 0
-                                            ? 'positive'
-                                            : sectionDiffWorkout < 0
-                                            ? 'negative'
-                                            : 'neutral'
-                                    }
-                                >
-                                    Workout Δ:{' '}
-                                    {sectionDiffWorkout > 0
-                                        ? `+${sectionDiffWorkout}`
-                                        : sectionDiffWorkout}{' '}
-                                    kg
-                                </span>
                             </div>
                         </div>
 
+                        {/* Exercises */}
                         <div className="exercise-cards">
                             {Object.entries(data.exercises).map(
-                                ([name, { bestWeight, totalWeight }]) => {
-                                    const prevLoad =
-                                        previousStats[type]?.exercises?.[name]
-                                            ?.totalWeight || 0
-                                    const lastLoad =
-                                        prevStats[type]?.exercises?.[name]
-                                            ?.totalWeight || 0
-                                    const diffWeek = totalWeight - prevLoad
-                                    const diffWorkout = totalWeight - lastLoad
-
-                                    // Historical data for chart
+                                ([name, statsEx]) => {
                                     const history = getExerciseHistory(name)
+
                                     const chartData = {
                                         labels: history.map((h) => h.date),
                                         datasets: [
                                             {
-                                                label: 'Best Weight',
+                                                label: 'Exercise Daily Load',
                                                 data: history.map(
-                                                    (h) => h.weight
+                                                    (h) => h.totalWeight
                                                 ),
-                                                fill: false,
                                                 borderColor: '#2e8b57',
+                                                fill: false,
                                                 tension: 0.3,
                                             },
                                         ],
@@ -165,7 +194,7 @@ export default function WorkoutSummary({ workouts }) {
                                             y: {
                                                 title: {
                                                     display: true,
-                                                    text: 'Weight (kg)',
+                                                    text: 'Load (kg)',
                                                 },
                                                 beginAtZero: true,
                                             },
@@ -177,50 +206,24 @@ export default function WorkoutSummary({ workouts }) {
                                             key={name}
                                             className="exercise-card"
                                         >
-                                            <div className="exercise-name">
+                                            <div className="exercise-header">
                                                 {name}
                                             </div>
                                             <div className="exercise-info">
                                                 <span>
-                                                    Best: {bestWeight} kg
+                                                    Total Weight:{' '}
+                                                    {statsEx.totalWeight} kg
                                                 </span>
                                                 <span>
-                                                    Total: {totalWeight} kg
+                                                    Total Reps:{' '}
+                                                    {statsEx.totalReps}
                                                 </span>
-                                                <span
-                                                    className={
-                                                        diffWeek > 0
-                                                            ? 'positive'
-                                                            : diffWeek < 0
-                                                            ? 'negative'
-                                                            : 'neutral'
-                                                    }
-                                                >
-                                                    Δ Week:{' '}
-                                                    {diffWeek > 0
-                                                        ? `+${diffWeek}`
-                                                        : diffWeek}{' '}
-                                                    kg
-                                                </span>
-                                                <span
-                                                    className={
-                                                        diffWorkout > 0
-                                                            ? 'positive'
-                                                            : diffWorkout < 0
-                                                            ? 'negative'
-                                                            : 'neutral'
-                                                    }
-                                                >
-                                                    Δ Last:{' '}
-                                                    {diffWorkout > 0
-                                                        ? `+${diffWorkout}`
-                                                        : diffWorkout}{' '}
-                                                    kg
+                                                <span>
+                                                    Best Set: {statsEx.bestSet}{' '}
+                                                    kg·rep
                                                 </span>
                                             </div>
-
-                                            {/* Historical graph */}
-                                            {history.length > 1 && (
+                                            {history.length > 0 && (
                                                 <div className="exercise-chart">
                                                     <Line
                                                         data={chartData}
@@ -233,6 +236,50 @@ export default function WorkoutSummary({ workouts }) {
                                 }
                             )}
                         </div>
+
+                        {/* Section historical chart */}
+                        {sectionHistory.length > 0 && (
+                            <div className="section-chart">
+                                <h4>Section Daily Load Over Time</h4>
+                                <Line
+                                    data={{
+                                        labels: sectionHistory.map(
+                                            (h) => h.date
+                                        ),
+                                        datasets: [
+                                            {
+                                                label: 'Section Daily Load',
+                                                data: sectionHistory.map(
+                                                    (h) => h.totalWeight
+                                                ),
+                                                borderColor: '#1f78b4',
+                                                fill: false,
+                                                tension: 0.3,
+                                            },
+                                        ],
+                                    }}
+                                    options={{
+                                        responsive: true,
+                                        plugins: { legend: { display: true } },
+                                        scales: {
+                                            x: {
+                                                title: {
+                                                    display: true,
+                                                    text: 'Date',
+                                                },
+                                            },
+                                            y: {
+                                                title: {
+                                                    display: true,
+                                                    text: 'Load (kg)',
+                                                },
+                                                beginAtZero: true,
+                                            },
+                                        },
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
                 )
             })}
