@@ -5,7 +5,7 @@ import WorkoutList from './components/WorkoutList'
 import WorkoutSummary from './components/WorkoutSummary'
 import Preferences from './components/Preferences'
 import AddExerciseForm from './components/AddExerciseForm'
-
+import { computePrevStatsBySectionAndExercise } from './helpers/workout'
 import './App.css'
 
 export default function App() {
@@ -153,77 +153,12 @@ export default function App() {
     const todayWorkouts = workouts.filter(
         (w) => w.created_at.slice(0, 10) === todayStr
     )
-
-    // Compute previous stats for both sections and exercises
-    const computePrevStatsBySectionAndExercise = (
-        todayWorkouts,
-        allWorkouts
-    ) => {
-        const prevStats = { sections: {}, exercises: {} }
-        const today = new Date().toISOString().slice(0, 10)
-
-        // Get last workout date before today
-        const previousDates = Array.from(
-            new Set(allWorkouts.map((w) => w.created_at.slice(0, 10)))
-        ).filter((d) => d < today)
-        previousDates.sort()
-        const lastDate = previousDates[previousDates.length - 1]
-        if (!lastDate) return prevStats
-
-        const lastWorkout = allWorkouts.filter(
-            (w) => w.created_at.slice(0, 10) === lastDate
-        )
-
-        lastWorkout.forEach((w) => {
-            const section = w.exercises?.type
-            const name = w.exercises?.name
-            const total = (w.weight || 0) * (w.reps || 0)
-            const maxWeight = w.weight || 0
-
-            // Section stats
-            if (!prevStats.sections[section])
-                prevStats.sections[section] = {
-                    prevTotalWeight: 0,
-                    loadToGo: 0,
-                }
-            prevStats.sections[section].prevTotalWeight += total
-
-            // Exercise stats
-            if (!prevStats.exercises[name])
-                prevStats.exercises[name] = {
-                    prevTotalWeight: 0,
-                    loadToGo: 0,
-                    lastMaxWeight: 0,
-                }
-            prevStats.exercises[name].prevTotalWeight += total
-            prevStats.exercises[name].lastMaxWeight = Math.max(
-                prevStats.exercises[name].lastMaxWeight,
-                maxWeight
-            )
-        })
-
-        // Reduce load-to-go based on today's workouts
-        todayWorkouts.forEach((w) => {
-            const section = w.exercises?.type
-            const name = w.exercises?.name
-            const totalToday = (w.weight || 0) * (w.reps || 0)
-
-            if (prevStats.sections[section])
-                prevStats.sections[section].loadToGo =
-                    prevStats.sections[section].prevTotalWeight - totalToday
-
-            if (prevStats.exercises[name])
-                prevStats.exercises[name].loadToGo =
-                    prevStats.exercises[name].prevTotalWeight - totalToday
-        })
-
-        return prevStats
-    }
+    const currentDate = new Date().toLocaleDateString()
 
     // Call it
-    const prevStatsBySectionAndExercise = computePrevStatsBySectionAndExercise(
-        todayWorkouts,
-        workouts
+    const prevStats = computePrevStatsBySectionAndExercise(
+        workouts,
+        currentDate
     )
 
     return (
@@ -280,7 +215,7 @@ export default function App() {
                             onDelete={handleDelete}
                             onEdit={handleEdit}
                             hideDate={true}
-                            prevStats={prevStatsBySectionAndExercise} // <-- both section & exercise stats
+                            prevStats={prevStats} // <-- both section & exercise stats
                         />
                     </>
                 )}

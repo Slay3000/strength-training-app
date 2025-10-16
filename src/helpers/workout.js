@@ -144,3 +144,186 @@ export function groupWorkoutsByType(workouts) {
         return acc
     }, {})
 }
+export function computePrevStatsBySectionAndExercise(
+    allWorkouts = [],
+    currentDateLocale
+) {
+    if (!Array.isArray(allWorkouts) || allWorkouts.length === 0) {
+        return { sections: {}, exercises: {} }
+    }
+
+    // Format helper
+    const getLocalDate = (created_at) => {
+        try {
+            if (!created_at) return null
+            return new Date(created_at).toLocaleDateString()
+        } catch {
+            return null
+        }
+    }
+
+    // Group by date
+    const byDate = allWorkouts.reduce((acc, w) => {
+        const d = getLocalDate(w.created_at) || 'Unknown'
+        acc[d] = acc[d] || []
+        acc[d].push(w)
+        return acc
+    }, {})
+
+    // Normalize date
+    const todayLocale = currentDateLocale || new Date().toLocaleDateString()
+
+    const localeFromDate = (dateObj) => dateObj.toLocaleDateString()
+    const decDays = (dateObj, n = 1) => {
+        const d = new Date(dateObj)
+        d.setDate(d.getDate() - n)
+        return d
+    }
+
+    const MAX_LOOKBACK_DAYS = 365
+    let currentWorkouts = byDate[todayLocale] || []
+
+    // Find **most recent previous day with any workouts**
+    let scanDate = new Date(todayLocale)
+    if (byDate[todayLocale]) scanDate = decDays(scanDate, 1)
+
+    let prevDayWorkouts = []
+    for (let i = 0; i < MAX_LOOKBACK_DAYS; i++) {
+        const key = localeFromDate(scanDate)
+        if (byDate[key] && byDate[key].length) {
+            prevDayWorkouts = byDate[key]
+            break
+        }
+        scanDate = decDays(scanDate, 1)
+    }
+
+    const totalWeight = (sets) =>
+        sets.reduce(
+            (sum, s) => sum + (Number(s.weight) || 0) * (Number(s.reps) || 0),
+            0
+        )
+
+    const groupBy = (arr, fn) =>
+        arr.reduce((acc, item) => {
+            const key = fn(item) ?? 'Unknown'
+            acc[key] = acc[key] || []
+            acc[key].push(item)
+            return acc
+        }, {})
+
+    // Group current and previous workouts by section
+    const prevByType = groupBy(
+        prevDayWorkouts,
+        (w) => w.exercises?.type ?? 'Unknown'
+    )
+    const currByType = groupBy(
+        currentWorkouts,
+        (w) => w.exercises?.type ?? 'Unknown'
+    )
+
+    const allTypes = new Set([
+        ...Object.keys(prevByType),
+        ...Object.keys(currByType),
+    ])
+    const prevStats = { sections: {}, exercises: {} }
+
+    for (const type of allTypes) {
+        const prevTypeSets = prevByType[type] || []
+        const currTypeSets = currByType[type] || []
+
+        const prevTypeTotal = totalWeight(prevTypeSets)
+        const currTypeTotal = totalWeight(currTypeSets)
+        const sectionLoadToGo =
+            prevTypeTotal > 0 ? prevTypeTotal - currTypeTotal : 0
+
+        prevStats.sections[type] = {
+            prevTotalWeight: prevTypeTotal,
+            currentTotalWeight: currTypeTotal,
+            loadToGo: sectionLoadToGo,
+            exercises: {},
+        }
+
+        // Group exercises under this section
+        const prevByExercise = groupBy(
+            prevTypeSets,
+            (w) => w.exercises?.name ?? 'Unknown'
+        )
+        const currByExercise = groupBy(
+            currTypeSets,
+            (w) => w.exercises?.name ?? 'Unknown'
+        )
+        const allExercises = new Set([
+            ...Object.keys(prevByExercise),
+            ...Object.keys(currByExercise),
+        ])
+
+        // --- computePrevStatsBySectionAndExercise (fixed loadToGo logic) ---
+        for (const exName of allExercises) {
+            const currSets = currByExercise[exName] || []
+
+            // Look for previous sets for this exercise (recursive back-search)
+            let prevSets = prevByExercise[exName] || []
+            if (prevSets.length === 0) {
+                let lookbackDate = decDays(new Date(todayLocale), 1)
+                for (let i = 0; i < MAX_LOOKBACK_DAYS; i++) {
+                    const key = localeFromDate(lookbackDate)
+                    const workoutsForDay = byDate[key] || []
+                    const found = workoutsForDay.filter(
+                        (w) =>
+                            w.exercises?.name === exName &&
+                            w.exercises?.type === type
+                    )
+                    if (found.length) {
+                        prevSets = found
+                        break
+                    }
+                    lookbackDate = decDays(lookbackDate, 1)
+                }
+            }
+
+            const prevTotal = totalWeight(prevSets)
+            const currTotal = totalWeight(currSets)
+
+            // ✅ Only compute loadToGo relative to previous exercise total
+            // and never double count or invert sign
+            const loadToGo =
+                prevSets.length > 0
+                    ? Math.max(prevTotal - currTotal, -(currTotal - prevTotal)) // ensures correct sign
+                    : 0
+
+            const lastMaxWeight = prevSets.length
+                ? Math.max(...prevSets.map((s) => Number(s.weight) || 0))
+                : 0
+            const totalReps = currSets.reduce(
+                (sum, s) => sum + (Number(s.reps) || 0),
+                0
+            )
+            const bestSet = currSets.length
+                ? Math.max(
+                      ...currSets.map(
+                          (s) => (Number(s.weight) || 0) * (Number(s.reps) || 0)
+                      )
+                  )
+                : 0
+
+            prevStats.sections[type].exercises[exName] = {
+                prevTotalWeight: prevTotal,
+                currentTotalWeight: currTotal,
+                loadToGo,
+                lastMaxWeight,
+                totalWeight: currTotal,
+                totalReps,
+                bestSet,
+            }
+
+            prevStats.exercises[exName] = {
+                prevTotalWeight: prevTotal,
+                currentTotalWeight: currTotal,
+                loadToGo,
+                lastMaxWeight,
+            }
+        }
+    }
+
+    return prevStats
+}
