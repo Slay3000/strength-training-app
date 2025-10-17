@@ -188,8 +188,7 @@ export function computePrevStatsBySectionAndExercise(
 
         const prevTypeTotal = totalWeight(prevTypeSets)
         const currTypeTotal = totalWeight(currTypeSets)
-        const sectionLoadToGo =
-            prevTypeTotal > 0 ? prevTypeTotal - currTypeTotal : 0
+        const sectionLoadToGo = prevTypeTotal - currTypeTotal
 
         prevStats.sections[type] = {
             prevTotalWeight: prevTypeTotal,
