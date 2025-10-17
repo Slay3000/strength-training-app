@@ -98,59 +98,21 @@ export function groupWorkoutsByType(workouts) {
         return acc
     }, {})
 }
-export function computePrevStatsBySectionAndExercise(
-    allWorkouts = [],
-    currentDateLocale
-) {
+
+export function computePrevStatsBySectionAndExercise(allWorkouts = []) {
     if (!Array.isArray(allWorkouts) || allWorkouts.length === 0) {
-        return { sections: {}, exercises: {} }
+        return { sections: {}, exercises: {}, weeklyAverages: {}, overall: {} }
     }
 
-    // Format helper
     const getLocalDate = (created_at) => {
         try {
-            if (!created_at) return null
             return new Date(created_at).toISOString().slice(0, 10)
         } catch {
-            return null
+            return 'Unknown'
         }
     }
 
-    // Group by date
-    const byDate = allWorkouts.reduce((acc, w) => {
-        const d = getLocalDate(w.created_at) || 'Unknown'
-        acc[d] = acc[d] || []
-        acc[d].push(w)
-        return acc
-    }, {})
-
-    // Normalize date
-    const todayLocale =
-        currentDateLocale || new Date().toISOString().slice(0, 10)
-
-    const localeFromDate = (dateObj) => dateObj.toISOString().slice(0, 10)
-    const decDays = (dateObj, n = 1) => {
-        const d = new Date(dateObj)
-        d.setDate(d.getDate() - n)
-        return d
-    }
-
-    const MAX_LOOKBACK_DAYS = 365
-    let currentWorkouts = byDate[todayLocale] || []
-
-    // Find **most recent previous day with any workouts**
-    let scanDate = new Date(todayLocale)
-    if (byDate[todayLocale]) scanDate = decDays(scanDate, 1)
-
-    let prevDayWorkouts = []
-    for (let i = 0; i < MAX_LOOKBACK_DAYS; i++) {
-        const key = localeFromDate(scanDate)
-        if (byDate[key] && byDate[key].length) {
-            prevDayWorkouts = byDate[key]
-            break
-        }
-        scanDate = decDays(scanDate, 1)
-    }
+    const todayStr = new Date().toISOString().slice(0, 10)
 
     const totalWeight = (sets) =>
         sets.reduce(
@@ -158,125 +120,158 @@ export function computePrevStatsBySectionAndExercise(
             0
         )
 
-    const groupBy = (arr, fn) =>
-        arr.reduce((acc, item) => {
-            const key = fn(item) ?? 'Unknown'
-            acc[key] = acc[key] || []
-            acc[key].push(item)
-            return acc
-        }, {})
+    const totalReps = (sets) =>
+        sets.reduce((sum, s) => sum + (Number(s.reps) || 0), 0)
 
-    // Group current and previous workouts by section
-    const prevByType = groupBy(
-        prevDayWorkouts,
-        (w) => w.exercises?.type ?? 'Unknown'
-    )
-    const currByType = groupBy(
-        currentWorkouts,
-        (w) => w.exercises?.type ?? 'Unknown'
-    )
+    const bestSetValue = (sets) =>
+        sets.length
+            ? Math.max(
+                  ...sets.map(
+                      (s) => (Number(s.weight) || 0) * (Number(s.reps) || 0)
+                  )
+              )
+            : 0
 
-    const allTypes = new Set([
-        ...Object.keys(prevByType),
-        ...Object.keys(currByType),
-    ])
-    const prevStats = { sections: {}, exercises: {} }
+    // Group workouts by type and exercise
+    const exercisesByType = {}
+    allWorkouts.forEach((w) => {
+        const type = w.exercises?.type || 'Unknown'
+        const name = w.exercises?.name || 'Unknown'
+        if (!exercisesByType[type]) exercisesByType[type] = {}
+        if (!exercisesByType[type][name]) exercisesByType[type][name] = []
+        exercisesByType[type][name].push(w)
+    })
 
-    for (const type of allTypes) {
-        const prevTypeSets = prevByType[type] || []
-        const currTypeSets = currByType[type] || []
+    const prevStats = {
+        sections: {},
+        exercises: {},
+        weeklyAverages: {},
+        overall: {},
+    }
+    let overallPrev = 0
+    let overallCurr = 0
 
-        const prevTypeTotal = totalWeight(prevTypeSets)
-        const currTypeTotal = totalWeight(currTypeSets)
-        const sectionLoadToGo = prevTypeTotal - currTypeTotal
-
+    for (const type of Object.keys(exercisesByType)) {
+        const exercises = exercisesByType[type]
+        let sectionPrevTotal = 0
+        let sectionCurrTotal = 0
         prevStats.sections[type] = {
-            prevTotalWeight: prevTypeTotal,
-            currentTotalWeight: currTypeTotal,
-            loadToGo: sectionLoadToGo,
             exercises: {},
+            prevTotalWeight: 0,
+            currentTotalWeight: 0,
+            loadToGo: 0,
         }
 
-        // Group exercises under this section
-        const prevByExercise = groupBy(
-            prevTypeSets,
-            (w) => w.exercises?.name ?? 'Unknown'
-        )
-        const currByExercise = groupBy(
-            currTypeSets,
-            (w) => w.exercises?.name ?? 'Unknown'
-        )
-        const allExercises = new Set([
-            ...Object.keys(prevByExercise),
-            ...Object.keys(currByExercise),
-        ])
-
-        // --- computePrevStatsBySectionAndExercise (fixed loadToGo logic) ---
-        for (const exName of allExercises) {
-            const currSets = currByExercise[exName] || []
-
-            // Look for previous sets for this exercise (recursive back-search)
-            let prevSets = prevByExercise[exName] || []
-            if (prevSets.length === 0) {
-                let lookbackDate = decDays(new Date(todayLocale), 1)
-                for (let i = 0; i < MAX_LOOKBACK_DAYS; i++) {
-                    const key = localeFromDate(lookbackDate)
-                    const workoutsForDay = byDate[key] || []
-                    const found = workoutsForDay.filter(
-                        (w) =>
-                            w.exercises?.name === exName &&
-                            w.exercises?.type === type
-                    )
-                    if (found.length) {
-                        prevSets = found
-                        break
-                    }
-                    lookbackDate = decDays(lookbackDate, 1)
-                }
-            }
+        for (const exName of Object.keys(exercises)) {
+            const allSets = exercises[exName]
+            const prevSets = allSets.filter(
+                (s) => getLocalDate(s.created_at) !== todayStr
+            )
+            const currSets = allSets.filter(
+                (s) => getLocalDate(s.created_at) === todayStr
+            )
 
             const prevTotal = totalWeight(prevSets)
             const currTotal = totalWeight(currSets)
-
-            // ✅ Only compute loadToGo relative to previous exercise total
-            // and never double count or invert sign
-            const loadToGo =
-                prevSets.length > 0
-                    ? Math.max(prevTotal - currTotal, -(currTotal - prevTotal)) // ensures correct sign
-                    : 0
-
+            const exerciseLoadToGo = prevTotal - currTotal
             const lastMaxWeight = prevSets.length
                 ? Math.max(...prevSets.map((s) => Number(s.weight) || 0))
                 : 0
-            const totalReps = currSets.reduce(
-                (sum, s) => sum + (Number(s.reps) || 0),
-                0
-            )
-            const bestSet = currSets.length
-                ? Math.max(
-                      ...currSets.map(
-                          (s) => (Number(s.weight) || 0) * (Number(s.reps) || 0)
-                      )
-                  )
-                : 0
+            const totalRepsVal = totalReps(currSets)
+            const bestSet = bestSetValue(currSets)
 
             prevStats.sections[type].exercises[exName] = {
                 prevTotalWeight: prevTotal,
                 currentTotalWeight: currTotal,
-                loadToGo,
+                loadToGo: exerciseLoadToGo,
                 lastMaxWeight,
                 totalWeight: currTotal,
-                totalReps,
+                totalReps: totalRepsVal,
                 bestSet,
             }
 
             prevStats.exercises[exName] = {
                 prevTotalWeight: prevTotal,
                 currentTotalWeight: currTotal,
-                loadToGo,
+                loadToGo: exerciseLoadToGo,
                 lastMaxWeight,
             }
+
+            sectionPrevTotal += prevTotal
+            sectionCurrTotal += currTotal
         }
+
+        prevStats.sections[type].prevTotalWeight = sectionPrevTotal
+        prevStats.sections[type].currentTotalWeight = sectionCurrTotal
+        prevStats.sections[type].loadToGo = sectionPrevTotal - sectionCurrTotal
+
+        overallPrev += sectionPrevTotal
+        overallCurr += sectionCurrTotal
+    }
+
+    // Weekly averages (Monday to Sunday)
+    const today = new Date()
+    const dayOfWeek = today.getDay() // 0 = Sunday
+    const mondayThisWeek = new Date(today)
+    mondayThisWeek.setDate(today.getDate() - ((dayOfWeek + 6) % 7))
+
+    const mondayLastWeek = new Date(mondayThisWeek)
+    mondayLastWeek.setDate(mondayThisWeek.getDate() - 7)
+
+    const isInWeek = (d, start) => {
+        const date = new Date(d)
+        const end = new Date(start)
+        end.setDate(end.getDate() + 7)
+        return date >= start && date < end
+    }
+
+    const sectionsWeekly = {}
+    for (const type of Object.keys(exercisesByType)) {
+        const exercises = exercisesByType[type]
+
+        const thisWeekSets = []
+        const lastWeekSets = []
+
+        Object.values(exercises).forEach((sets) => {
+            sets.forEach((s) => {
+                const date = new Date(s.created_at)
+                if (isInWeek(date, mondayThisWeek)) thisWeekSets.push(s)
+                else if (isInWeek(date, mondayLastWeek)) lastWeekSets.push(s)
+            })
+        })
+
+        const sumWeight = (sets) => totalWeight(sets)
+        const daysWithWorkouts = (sets) =>
+            new Set(sets.map((s) => getLocalDate(s.created_at))).size || 1
+
+        const currentWeekAvg = Math.round(
+            sumWeight(thisWeekSets) / daysWithWorkouts(thisWeekSets)
+        )
+        const previousWeekAvg = Math.round(
+            sumWeight(lastWeekSets) / daysWithWorkouts(lastWeekSets)
+        )
+
+        sectionsWeekly[type] = {
+            currentWeekAvg,
+            previousWeekAvg,
+            loadToGo: previousWeekAvg - currentWeekAvg,
+        }
+    }
+
+    prevStats.weeklyAverages = sectionsWeekly
+    prevStats.overall = {
+        currentWeekAvg: Object.values(sectionsWeekly).reduce(
+            (sum, s) => sum + s.currentWeekAvg,
+            0
+        ),
+        previousWeekAvg: Object.values(sectionsWeekly).reduce(
+            (sum, s) => sum + s.previousWeekAvg,
+            0
+        ),
+        loadToGo: Object.values(sectionsWeekly).reduce(
+            (sum, s) => sum + s.loadToGo,
+            0
+        ),
     }
 
     return prevStats
@@ -287,77 +282,148 @@ export function computeWeeklySectionAverages(allWorkouts = []) {
         return { overall: {}, sections: {} }
     }
 
-    const now = new Date()
-    const oneWeekAgo = new Date(now)
-    oneWeekAgo.setDate(now.getDate() - 7)
-    const twoWeeksAgo = new Date(now)
-    twoWeeksAgo.setDate(now.getDate() - 14)
-
-    // Split workouts into weeks
-    const currentWeek = allWorkouts.filter(
-        (w) => new Date(w.created_at) >= oneWeekAgo
-    )
-    const previousWeek = allWorkouts.filter(
-        (w) =>
-            new Date(w.created_at) >= twoWeeksAgo &&
-            new Date(w.created_at) < oneWeekAgo
-    )
-
     const totalWeight = (sets) =>
         sets.reduce(
             (sum, s) => sum + (Number(s.weight) || 0) * (Number(s.reps) || 0),
             0
         )
 
-    const groupBy = (arr, fn) =>
-        arr.reduce((acc, item) => {
-            const key = fn(item) ?? 'Unknown'
-            acc[key] = acc[key] || []
-            acc[key].push(item)
-            return acc
-        }, {})
+    // --- Compute current and previous week (Monday to Sunday) ---
+    const today = new Date()
+    const dayOfWeek = today.getDay() // Sunday = 0
+    const diffToMonday = (dayOfWeek + 6) % 7
+    const currentWeekStart = new Date(today)
+    currentWeekStart.setDate(today.getDate() - diffToMonday)
+    currentWeekStart.setHours(0, 0, 0, 0)
 
-    // Group current and previous by section
-    const currByType = groupBy(
-        currentWeek,
-        (w) => w.exercises?.type ?? 'Unknown'
+    const previousWeekStart = new Date(currentWeekStart)
+    previousWeekStart.setDate(currentWeekStart.getDate() - 7)
+    const previousWeekEnd = new Date(currentWeekStart)
+    previousWeekEnd.setMilliseconds(-1)
+
+    // Group workouts by date
+    const workoutsByDate = allWorkouts.reduce((acc, w) => {
+        const date = new Date(w.created_at).toISOString().slice(0, 10)
+        if (!acc[date]) acc[date] = []
+        acc[date].push(w)
+        return acc
+    }, {})
+
+    // Filter current & previous week workouts
+    const currentWeekDates = Object.keys(workoutsByDate).filter(
+        (d) => new Date(d) >= currentWeekStart
     )
-    const prevByType = groupBy(
-        previousWeek,
-        (w) => w.exercises?.type ?? 'Unknown'
+    const previousWeekDates = Object.keys(workoutsByDate).filter(
+        (d) =>
+            new Date(d) >= previousWeekStart && new Date(d) <= previousWeekEnd
     )
 
+    // --- Section totals per week ---
+    const sectionTotals = {}
+    const sectionDays = {} // track how many days each section appeared
+
+    currentWeekDates.forEach((date) => {
+        const dayWorkouts = workoutsByDate[date]
+        const byType = {}
+        dayWorkouts.forEach((w) => {
+            const type = w.exercises?.type ?? 'Unknown'
+            byType[type] = byType[type] || []
+            byType[type].push(w)
+        })
+
+        Object.entries(byType).forEach(([type, sets]) => {
+            const dayTotal = totalWeight(sets)
+            sectionTotals[type] = (sectionTotals[type] || 0) + dayTotal
+            sectionDays[type] = (sectionDays[type] || 0) + 1
+        })
+    })
+
+    const prevSectionTotals = {}
+    const prevSectionDays = {}
+
+    previousWeekDates.forEach((date) => {
+        const dayWorkouts = workoutsByDate[date]
+        const byType = {}
+        dayWorkouts.forEach((w) => {
+            const type = w.exercises?.type ?? 'Unknown'
+            byType[type] = byType[type] || []
+            byType[type].push(w)
+        })
+
+        Object.entries(byType).forEach(([type, sets]) => {
+            const dayTotal = totalWeight(sets)
+            prevSectionTotals[type] = (prevSectionTotals[type] || 0) + dayTotal
+            prevSectionDays[type] = (prevSectionDays[type] || 0) + 1
+        })
+    })
+
+    // --- Compute per-section weekly averages ---
     const allSections = new Set([
-        ...Object.keys(currByType),
-        ...Object.keys(prevByType),
+        ...Object.keys(sectionTotals),
+        ...Object.keys(prevSectionTotals),
     ])
 
     const sections = {}
-    let currTotal = 0
-    let prevTotal = 0
+    let currWeekSum = 0
+    let prevWeekSum = 0
 
-    for (const type of allSections) {
-        const currSets = currByType[type] || []
-        const prevSets = prevByType[type] || []
-
-        const currWeight = totalWeight(currSets)
-        const prevWeight = totalWeight(prevSets)
-
-        currTotal += currWeight
-        prevTotal += prevWeight
+    allSections.forEach((type) => {
+        const currAvg =
+            sectionDays[type] && sectionTotals[type]
+                ? sectionTotals[type] / sectionDays[type]
+                : 0
+        const prevAvg =
+            prevSectionDays[type] && prevSectionTotals[type]
+                ? prevSectionTotals[type] / prevSectionDays[type]
+                : 0
 
         sections[type] = {
-            currentWeekAvg: Math.round(currWeight / 7), // per-day avg
-            previousWeekAvg: Math.round(prevWeight / 7),
-            loadToGo: prevWeight - currWeight,
+            currentWeekAvg: Math.round(currAvg),
+            previousWeekAvg: Math.round(prevAvg),
+            loadToGo: Math.round(prevAvg - currAvg),
         }
-    }
+
+        currWeekSum += currAvg
+        prevWeekSum += prevAvg
+    })
 
     const overall = {
-        currentWeekAvg: Math.round(currTotal / 7),
-        previousWeekAvg: Math.round(prevTotal / 7),
-        loadToGo: prevTotal - currTotal,
+        currentWeekAvg: Math.round(currWeekSum),
+        previousWeekAvg: Math.round(prevWeekSum),
+        loadToGo: Math.round(prevWeekSum - currWeekSum),
     }
 
     return { overall, sections }
+}
+
+function getWeeklyStats(allWorkouts, weekStartDate, weekEndDate) {
+    const byType = {}
+    const byDayType = {}
+
+    allWorkouts.forEach((w) => {
+        const date = new Date(w.created_at)
+        if (date < weekStartDate || date > weekEndDate) return
+
+        const type = w.exercises?.type || 'Unknown'
+        const weight = Number(w.weight) || 0
+        const reps = Number(w.reps) || 0
+        const total = weight * reps
+        const day = date.toISOString().slice(0, 10)
+
+        // Sum by section
+        byType[type] = (byType[type] || 0) + total
+
+        // Track unique days per type
+        if (!byDayType[type]) byDayType[type] = {}
+        byDayType[type][day] = (byDayType[type][day] || 0) + total
+    })
+
+    // Compute avg per workout day
+    const avgByType = {}
+    Object.keys(byType).forEach((type) => {
+        const days = Object.keys(byDayType[type]).length || 1
+        avgByType[type] = Math.round(byType[type] / days)
+    })
+
+    return avgByType
 }

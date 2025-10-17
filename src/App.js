@@ -152,7 +152,7 @@ export default function App() {
         )
 
     // inside App.js, before return
-    const todayStr = new Date().toISOString().split('T')[0]
+    const todayStr = new Date().toISOString().slice(0, 10)
     const todayWorkouts = workouts.filter(
         (w) => w.created_at.slice(0, 10) === todayStr
     )

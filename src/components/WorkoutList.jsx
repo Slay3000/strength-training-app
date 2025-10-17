@@ -228,8 +228,7 @@ export default function WorkoutList({
 
                                                     // Adjust load-to-go sign
                                                     const displayLoadToGo =
-                                                        exerciseLoadToGo -
-                                                        totalWeight
+                                                        exerciseLoadToGo
 
                                                     return (
                                                         <div
