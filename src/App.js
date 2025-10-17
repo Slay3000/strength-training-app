@@ -153,13 +153,9 @@ export default function App() {
     const todayWorkouts = workouts.filter(
         (w) => w.created_at.slice(0, 10) === todayStr
     )
-    const currentDate = new Date().toLocaleDateString()
 
     // Call it
-    const prevStats = computePrevStatsBySectionAndExercise(
-        workouts,
-        currentDate
-    )
+    const prevStats = computePrevStatsBySectionAndExercise(workouts, todayStr)
 
     return (
         <div className="app-container">

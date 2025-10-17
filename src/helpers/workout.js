@@ -1,49 +1,3 @@
-// helpers/workout.js
-
-//     const byDate = {}
-
-//     workouts.forEach((w) => {
-//         const date = new Date(w.created_at).toLocaleDateString()
-//         const type = w.exercises?.type || 'Unknown'
-//         const name = w.exercises?.name || 'Unknown'
-
-//         if (!byDate[date]) byDate[date] = {}
-//         if (!byDate[date][type]) byDate[date][type] = {}
-//         if (!byDate[date][type][name]) byDate[date][type][name] = []
-
-//         byDate[date][type][name].push(w)
-//     })
-
-//     return byDate
-// }
-
-// Calculate section stats from workouts
-// export function calculateSectionStats(workouts) {
-//     if (!workouts || workouts.length === 0) return {}
-
-//     // Structure: { type: { totalWeight, exercises: { name: { totalWeight, bestWeight } } } }
-//     const stats = {}
-
-//     workouts.forEach((w) => {
-//         const type = w.exercises?.type || 'Unknown'
-//         const name = w.exercises?.name || 'Unknown Exercise'
-//         const load = (w.reps || 0) * (w.weight || 0)
-//         const weight = w.weight || 0
-
-//         if (!stats[type]) stats[type] = { totalWeight: 0, exercises: {} }
-//         stats[type].totalWeight += load
-
-//         if (!stats[type].exercises[name])
-//             stats[type].exercises[name] = { totalWeight: 0, bestWeight: 0 }
-
-//         stats[type].exercises[name].totalWeight += load
-//         if (weight > stats[type].exercises[name].bestWeight)
-//             stats[type].exercises[name].bestWeight = weight
-//     })
-
-//     return stats
-// }
-
 export function calculateSectionStats(workouts) {
     const stats = {}
 
@@ -74,7 +28,7 @@ export function calculateSectionStats(workouts) {
 export function groupWorkouts(workouts) {
     const grouped = {}
     workouts.forEach((w) => {
-        const date = new Date(w.created_at).toLocaleDateString()
+        const date = new Date(w.created_at).toISOString().slice(0, 10)
         const type = w.exercises?.type || 'Unknown'
         const name = w.exercises?.name || 'Unknown Exercise'
 
@@ -156,7 +110,7 @@ export function computePrevStatsBySectionAndExercise(
     const getLocalDate = (created_at) => {
         try {
             if (!created_at) return null
-            return new Date(created_at).toLocaleDateString()
+            return new Date(created_at).toISOString().slice(0, 10)
         } catch {
             return null
         }
@@ -171,9 +125,10 @@ export function computePrevStatsBySectionAndExercise(
     }, {})
 
     // Normalize date
-    const todayLocale = currentDateLocale || new Date().toLocaleDateString()
+    const todayLocale =
+        currentDateLocale || new Date().toISOString().slice(0, 10)
 
-    const localeFromDate = (dateObj) => dateObj.toLocaleDateString()
+    const localeFromDate = (dateObj) => dateObj.toISOString().slice(0, 10)
     const decDays = (dateObj, n = 1) => {
         const d = new Date(dateObj)
         d.setDate(d.getDate() - n)

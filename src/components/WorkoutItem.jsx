@@ -1,5 +1,5 @@
 export default function WorkoutItem({ workout, onDelete }) {
-    const date = new Date(workout.created_at).toLocaleDateString()
+    const date = new Date(workout.created_at).toISOString().slice(0, 10)
 
     return (
         <li className="workout-item">
