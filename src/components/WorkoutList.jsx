@@ -7,6 +7,7 @@ export default function WorkoutList({
     onEdit,
     hideDate = false,
     prevStats = { sections: {}, exercises: {} },
+    weeklyAverages,
 }) {
     const grouped = groupWorkouts(workouts)
     const [collapsedDates, setCollapsedDates] = useState({})
@@ -37,6 +38,31 @@ export default function WorkoutList({
 
                 return (
                     <div key={date} className="workout-date-card">
+                        {weeklyAverages?.overall && hideDate && (
+                            <div className="overall-weekly-stats stats-row">
+                                <div className="stats-block">
+                                    <strong>Overall Weekly Avg</strong>
+                                    {weeklyAverages.overall.currentWeekAvg} kg
+                                </div>
+                                <div
+                                    className={`stats-block ${
+                                        weeklyAverages.overall.loadToGo > 0
+                                            ? 'red-positive'
+                                            : weeklyAverages.overall.loadToGo <
+                                              0
+                                            ? 'green-negative'
+                                            : 'neutral'
+                                    }`}
+                                >
+                                    <strong>To Go (vs last week)</strong>
+                                    {weeklyAverages.overall.loadToGo > 0
+                                        ? `+${weeklyAverages.overall.loadToGo}`
+                                        : weeklyAverages.overall.loadToGo}{' '}
+                                    kg
+                                </div>
+                            </div>
+                        )}
+
                         {showDate && (
                             <div
                                 className="date-header"
@@ -96,6 +122,61 @@ export default function WorkoutList({
                                                             : sectionLoadToGo}{' '}
                                                         kg
                                                     </div>
+
+                                                    {weeklyAverages?.sections?.[
+                                                        type
+                                                    ] && (
+                                                        <>
+                                                            <div className="stats-block">
+                                                                <strong>
+                                                                    Avg Weekly
+                                                                    Load
+                                                                </strong>
+                                                                {
+                                                                    weeklyAverages
+                                                                        .sections[
+                                                                        type
+                                                                    ]
+                                                                        .currentWeekAvg
+                                                                }{' '}
+                                                                kg
+                                                            </div>
+                                                            <div
+                                                                className={`stats-block ${
+                                                                    weeklyAverages
+                                                                        .sections[
+                                                                        type
+                                                                    ].loadToGo >
+                                                                    0
+                                                                        ? 'red-positive'
+                                                                        : weeklyAverages
+                                                                              .sections[
+                                                                              type
+                                                                          ]
+                                                                              .loadToGo <
+                                                                          0
+                                                                        ? 'green-negative'
+                                                                        : 'neutral'
+                                                                }`}
+                                                            >
+                                                                <strong>
+                                                                    To Go (vs
+                                                                    last week)
+                                                                </strong>
+                                                                {weeklyAverages
+                                                                    .sections[
+                                                                    type
+                                                                ].loadToGo > 0
+                                                                    ? `+${weeklyAverages.sections[type].loadToGo}`
+                                                                    : weeklyAverages
+                                                                          .sections[
+                                                                          type
+                                                                      ]
+                                                                          .loadToGo}{' '}
+                                                                kg
+                                                            </div>
+                                                        </>
+                                                    )}
                                                 </div>
                                             )}
 

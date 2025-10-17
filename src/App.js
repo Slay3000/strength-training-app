@@ -5,7 +5,10 @@ import WorkoutList from './components/WorkoutList'
 import WorkoutSummary from './components/WorkoutSummary'
 import Preferences from './components/Preferences'
 import AddExerciseForm from './components/AddExerciseForm'
-import { computePrevStatsBySectionAndExercise } from './helpers/workout'
+import {
+    computePrevStatsBySectionAndExercise,
+    computeWeeklySectionAverages,
+} from './helpers/workout'
 import './App.css'
 
 export default function App() {
@@ -156,6 +159,7 @@ export default function App() {
 
     // Call it
     const prevStats = computePrevStatsBySectionAndExercise(workouts, todayStr)
+    const weeklyAverages = computeWeeklySectionAverages(workouts)
 
     return (
         <div className="app-container">
@@ -211,6 +215,7 @@ export default function App() {
                             onDelete={handleDelete}
                             onEdit={handleEdit}
                             hideDate={true}
+                            weeklyAverages={weeklyAverages}
                             prevStats={prevStats} // <-- both section & exercise stats
                         />
                     </>

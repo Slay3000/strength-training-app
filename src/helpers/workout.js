@@ -281,3 +281,83 @@ export function computePrevStatsBySectionAndExercise(
 
     return prevStats
 }
+
+export function computeWeeklySectionAverages(allWorkouts = []) {
+    if (!Array.isArray(allWorkouts) || allWorkouts.length === 0) {
+        return { overall: {}, sections: {} }
+    }
+
+    const now = new Date()
+    const oneWeekAgo = new Date(now)
+    oneWeekAgo.setDate(now.getDate() - 7)
+    const twoWeeksAgo = new Date(now)
+    twoWeeksAgo.setDate(now.getDate() - 14)
+
+    // Split workouts into weeks
+    const currentWeek = allWorkouts.filter(
+        (w) => new Date(w.created_at) >= oneWeekAgo
+    )
+    const previousWeek = allWorkouts.filter(
+        (w) =>
+            new Date(w.created_at) >= twoWeeksAgo &&
+            new Date(w.created_at) < oneWeekAgo
+    )
+
+    const totalWeight = (sets) =>
+        sets.reduce(
+            (sum, s) => sum + (Number(s.weight) || 0) * (Number(s.reps) || 0),
+            0
+        )
+
+    const groupBy = (arr, fn) =>
+        arr.reduce((acc, item) => {
+            const key = fn(item) ?? 'Unknown'
+            acc[key] = acc[key] || []
+            acc[key].push(item)
+            return acc
+        }, {})
+
+    // Group current and previous by section
+    const currByType = groupBy(
+        currentWeek,
+        (w) => w.exercises?.type ?? 'Unknown'
+    )
+    const prevByType = groupBy(
+        previousWeek,
+        (w) => w.exercises?.type ?? 'Unknown'
+    )
+
+    const allSections = new Set([
+        ...Object.keys(currByType),
+        ...Object.keys(prevByType),
+    ])
+
+    const sections = {}
+    let currTotal = 0
+    let prevTotal = 0
+
+    for (const type of allSections) {
+        const currSets = currByType[type] || []
+        const prevSets = prevByType[type] || []
+
+        const currWeight = totalWeight(currSets)
+        const prevWeight = totalWeight(prevSets)
+
+        currTotal += currWeight
+        prevTotal += prevWeight
+
+        sections[type] = {
+            currentWeekAvg: Math.round(currWeight / 7), // per-day avg
+            previousWeekAvg: Math.round(prevWeight / 7),
+            loadToGo: prevWeight - currWeight,
+        }
+    }
+
+    const overall = {
+        currentWeekAvg: Math.round(currTotal / 7),
+        previousWeekAvg: Math.round(prevTotal / 7),
+        loadToGo: prevTotal - currTotal,
+    }
+
+    return { overall, sections }
+}
