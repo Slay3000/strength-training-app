@@ -1,31 +1,5 @@
 import { WorkoutDay, WorkoutWeek, WorkoutMonth } from '../models/workoutModels'
 
-export function calculateSectionStats(workouts) {
-    const stats = {}
-
-    workouts.forEach((w) => {
-        const type = w.exercises?.type || 'Unknown'
-        const name = w.exercises?.name || 'Unknown'
-
-        if (!stats[type]) stats[type] = { totalWeight: 0, exercises: {} }
-
-        const weightForSet = (w.reps || 0) * (w.weight || 0)
-        stats[type].totalWeight += weightForSet
-
-        if (!stats[type].exercises[name]) {
-            stats[type].exercises[name] = { totalWeight: 0, bestWeight: 0 }
-        }
-
-        stats[type].exercises[name].totalWeight += weightForSet
-        stats[type].exercises[name].bestWeight = Math.max(
-            stats[type].exercises[name].bestWeight,
-            w.weight || 0
-        )
-    })
-
-    return stats
-}
-
 // Optional: group workouts by date -> type -> exercise
 export function groupWorkouts(workouts) {
     const grouped = {}
@@ -332,34 +306,90 @@ export function computeWeeklySectionAverages(allWorkouts = []) {
     return { overall, sections }
 }
 
-function getWeeklyStats(allWorkouts, weekStartDate, weekEndDate) {
-    const byType = {}
-    const byDayType = {}
+export function calculateSectionStats(workouts) {
+    const stats = {}
 
-    allWorkouts.forEach((w) => {
-        const date = new Date(w.created_at)
-        if (date < weekStartDate || date > weekEndDate) return
-
+    workouts.forEach((w) => {
         const type = w.exercises?.type || 'Unknown'
-        const weight = Number(w.weight) || 0
-        const reps = Number(w.reps) || 0
-        const total = weight * reps
-        const day = date.toISOString().slice(0, 10)
+        const name = w.exercises?.name || 'Unknown'
 
-        // Sum by section
-        byType[type] = (byType[type] || 0) + total
+        if (!stats[type]) stats[type] = { totalWeight: 0, exercises: {} }
 
-        // Track unique days per type
-        if (!byDayType[type]) byDayType[type] = {}
-        byDayType[type][day] = (byDayType[type][day] || 0) + total
+        const weightForSet = (w.reps || 0) * (w.weight || 0)
+        stats[type].totalWeight += weightForSet
+
+        if (!stats[type].exercises[name]) {
+            stats[type].exercises[name] = {
+                totalWeight: 0,
+                bestWeight: 0,
+                totalReps: 0,
+                bestSet: 0,
+            }
+        }
+
+        stats[type].exercises[name].totalWeight += weightForSet
+        stats[type].exercises[name].totalReps += w.reps || 0
+        stats[type].exercises[name].bestWeight = Math.max(
+            stats[type].exercises[name].bestWeight,
+            w.weight || 0
+        )
+        stats[type].exercises[name].bestSet = Math.max(
+            stats[type].exercises[name].bestSet,
+            weightForSet
+        )
     })
 
-    // Compute avg per workout day
-    const avgByType = {}
-    Object.keys(byType).forEach((type) => {
-        const days = Object.keys(byDayType[type]).length || 1
-        avgByType[type] = Math.round(byType[type] / days)
+    return stats
+}
+
+// ---------------------------
+// Compute weekly comparison
+// ---------------------------
+export function calculateWeeklyComparison(prevWeekWorkouts, currWeekWorkouts) {
+    const getWorkoutDaysCount = (workouts, section = null) => {
+        const days = new Set(
+            workouts
+                .filter((w) => (section ? w.exercises?.type === section : true))
+                .map((w) => w.created_at.slice(0, 10))
+        )
+        return days.size || 1
+    }
+
+    const weekStats = calculateSectionStats(currWeekWorkouts)
+    const prevWeekStats = calculateSectionStats(prevWeekWorkouts)
+
+    const allSections = new Set([
+        ...Object.keys(weekStats),
+        ...Object.keys(prevWeekStats),
+    ])
+
+    const diffBySection = {}
+    allSections.forEach((type) => {
+        const curr = weekStats[type]?.totalWeight || 0
+        const prev = prevWeekStats[type]?.totalWeight || 0
+        const currDays = getWorkoutDaysCount(currWeekWorkouts, type)
+        const prevDays = getWorkoutDaysCount(prevWeekWorkouts, type)
+        const currAvg = curr / currDays
+        const prevAvg = prev / prevDays
+        diffBySection[type] = Math.round(currAvg - prevAvg)
     })
 
-    return avgByType
+    const overallCurrTotal = Object.values(weekStats).reduce(
+        (sum, s) => sum + s.totalWeight,
+        0
+    )
+    const overallPrevTotal = Object.values(prevWeekStats).reduce(
+        (sum, s) => sum + s.totalWeight,
+        0
+    )
+    const overallCurrDays = getWorkoutDaysCount(currWeekWorkouts)
+    const overallPrevDays = getWorkoutDaysCount(prevWeekWorkouts)
+
+    return {
+        diffBySection,
+        overallDiff: Math.round(
+            overallCurrTotal / overallCurrDays -
+                overallPrevTotal / overallPrevDays
+        ),
+    }
 }

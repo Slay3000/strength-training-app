@@ -1,5 +1,3 @@
-// models/WorkoutModels.js
-
 export class WorkoutDay {
     constructor(date, workouts = []) {
         this.date = date
@@ -46,7 +44,11 @@ export class WorkoutDay {
         return this.sections?.[type] || {}
     }
 
-    /** 🔁 Compare this day to another WorkoutDay */
+    /**
+     * 🔁 Compare this day to another WorkoutDay (previous vs current)
+     * - this = previous day
+     * - otherDay = current day
+     */
     compareTo(otherDay) {
         const sections = {}
         const allTypes = new Set([
@@ -122,6 +124,27 @@ export class WorkoutDay {
                 loadToGo: overallPrev - overallCurr,
             },
         }
+    }
+
+    /** ⚙️ Static helper — get most recent previous day before a given date */
+    static getPreviousDay(allWorkouts, today = new Date()) {
+        const todayStr = today.toISOString().slice(0, 10)
+
+        // Group all workouts by date
+        const grouped = allWorkouts.reduce((acc, w) => {
+            const d = new Date(w.created_at).toISOString().slice(0, 10)
+            if (!acc[d]) acc[d] = []
+            acc[d].push(w)
+            return acc
+        }, {})
+
+        const prevDates = Object.keys(grouped)
+            .filter((d) => d < todayStr)
+            .sort((a, b) => new Date(b) - new Date(a))
+
+        const prevDate = prevDates[0]
+        if (!prevDate) return null
+        return new WorkoutDay(prevDate, grouped[prevDate])
     }
 }
 
