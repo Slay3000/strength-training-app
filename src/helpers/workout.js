@@ -364,14 +364,25 @@ export function calculateWeeklyComparison(prevWeekWorkouts, currWeekWorkouts) {
     ])
 
     const diffBySection = {}
+    const sectionDetails = {}
+
+    const currDays = getWorkoutDaysCount(currWeekWorkouts)
+    const prevDays = getWorkoutDaysCount(prevWeekWorkouts)
     allSections.forEach((type) => {
-        const curr = weekStats[type]?.totalWeight || 0
-        const prev = prevWeekStats[type]?.totalWeight || 0
-        const currDays = getWorkoutDaysCount(currWeekWorkouts, type)
-        const prevDays = getWorkoutDaysCount(prevWeekWorkouts, type)
-        const currAvg = curr / currDays
-        const prevAvg = prev / prevDays
+        const currTotal = weekStats[type]?.totalWeight || 0
+        const prevTotal = prevWeekStats[type]?.totalWeight || 0
+
+        const currAvg = currTotal / currDays
+        const prevAvg = prevTotal / prevDays
+
         diffBySection[type] = Math.round(currAvg - prevAvg)
+        sectionDetails[type] = {
+            prevAvg: Math.round(prevAvg),
+            currAvg: Math.round(currAvg),
+            prevTotal: Math.round(prevTotal),
+            currTotal: Math.round(currTotal),
+            diff: Math.round(currAvg - prevAvg),
+        }
     })
 
     const overallCurrTotal = Object.values(weekStats).reduce(
@@ -385,11 +396,17 @@ export function calculateWeeklyComparison(prevWeekWorkouts, currWeekWorkouts) {
     const overallCurrDays = getWorkoutDaysCount(currWeekWorkouts)
     const overallPrevDays = getWorkoutDaysCount(prevWeekWorkouts)
 
+    const overallCurrAvg = overallCurrTotal / overallCurrDays
+    const overallPrevAvg = overallPrevTotal / overallPrevDays
+    const overallDiff = overallCurrAvg - overallPrevAvg
+
     return {
         diffBySection,
-        overallDiff: Math.round(
-            overallCurrTotal / overallCurrDays -
-                overallPrevTotal / overallPrevDays
-        ),
+        sectionDetails,
+        overall: {
+            prevAvg: Math.round(overallPrevAvg),
+            currAvg: Math.round(overallCurrAvg),
+            diff: Math.round(overallDiff),
+        },
     }
 }

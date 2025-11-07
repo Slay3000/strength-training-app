@@ -153,6 +153,11 @@ export class WorkoutWeek {
         this.startDate = startDate
         this.workouts = Array.isArray(workouts) ? workouts : []
         this.days = this._groupByDay()
+        this.totalLoad = this.getTotalWeight() // initialize totalLoad
+    }
+
+    get avgLoadPerDay() {
+        return this.totalLoad / this.getDaysCount()
     }
 
     _groupByDay() {
@@ -185,6 +190,12 @@ export class WorkoutWeek {
             type,
             totalWeight: total,
             avg: Math.round(total / this.getDaysCount()),
+            exercises: filtered.reduce((acc, w) => {
+                const name = w.exercises?.name || 'Unknown'
+                if (!acc[name]) acc[name] = []
+                acc[name].push(w)
+                return acc
+            }, {}),
         }
     }
 
@@ -201,8 +212,8 @@ export class WorkoutWeek {
         ])
 
         const sections = {}
-        let overallCurrent = 0
-        let overallPrevious = 0
+        let overallCurrentTotal = 0
+        let overallPreviousTotal = 0
 
         for (const type of allTypes) {
             const curr = this.getSection(type)
@@ -214,10 +225,10 @@ export class WorkoutWeek {
             const previousWeekAvg = Math.round(
                 prev.totalWeight / otherWeek.getDaysCount()
             )
-            const loadToGo = previousWeekAvg - currentWeekAvg
+            const loadToGo = prev.totalWeight - curr.totalWeight
 
-            overallCurrent += currentWeekAvg
-            overallPrevious += previousWeekAvg
+            overallCurrentTotal += curr.totalWeight
+            overallPreviousTotal += prev.totalWeight
 
             sections[type] = {
                 type,
@@ -226,14 +237,19 @@ export class WorkoutWeek {
                 loadToGo,
                 avgWeeklyLoad: currentWeekAvg,
                 toGoVsLastWeek: loadToGo,
+                exercises: curr.exercises,
             }
         }
 
+        this.totalLoad = overallCurrentTotal // ✅ update totalLoad
+
         sections.overall = {
             type: 'Overall',
-            currentWeekAvg: overallCurrent,
-            previousWeekAvg: overallPrevious,
-            toGoVsLastWeek: overallPrevious - overallCurrent,
+            currentWeekAvg: overallCurrentTotal,
+            previousWeekAvg: overallPreviousTotal,
+            toGoVsLastWeek: overallPreviousTotal - overallCurrentTotal,
+            totalLoad: overallCurrentTotal,
+            diff: overallCurrentTotal - overallPreviousTotal,
         }
 
         return sections

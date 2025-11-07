@@ -17,7 +17,7 @@ export default function WorkoutForm({
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const containerRef = useRef(null)
 
-    // Fetch exercises
+    // Fetch exercises once
     useEffect(() => {
         async function fetchExercises() {
             const { data, error } = await supabase
@@ -26,20 +26,24 @@ export default function WorkoutForm({
                 .order('type', { ascending: true })
                 .order('name', { ascending: true })
 
-            if (error) console.error(error)
-            else setExercises(data || [])
+            if (error) {
+                console.error('Error fetching exercises:', error)
+                setExercises([])
+            } else {
+                setExercises(data || [])
+            }
         }
         fetchExercises()
     }, [])
 
-    // When exerciseId changes (e.g. editing), show its name in search input
+    // Set search term to the selected exercise's name
     useEffect(() => {
         if (!exerciseId) return
-        const ex = exercises.find((e) => e.id === exerciseId)
-        if (ex) setSearchTerm(ex.name)
+        const selected = exercises.find((e) => e.id === exerciseId)
+        if (selected) setSearchTerm(selected.name)
     }, [exerciseId, exercises])
 
-    // Close dropdown on outside click
+    // Close dropdown when clicking outside
     useEffect(() => {
         function handleClickOutside(e) {
             if (
@@ -54,35 +58,55 @@ export default function WorkoutForm({
             document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
-    // Filter visible exercises by search and hidden list
-    const visible = exercises
+    // Filter visible exercises
+    const visibleExercises = exercises
         .filter((ex) => !hiddenExercises.includes(ex.id))
-        .filter((ex) =>
-            searchTerm.trim()
-                ? ex.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  ex.type.toLowerCase().includes(searchTerm.toLowerCase())
-                : true
-        )
+        .filter((ex) => {
+            const term = searchTerm.trim().toLowerCase()
+            if (!term) return true
+            return (
+                ex.name.toLowerCase().includes(term) ||
+                (ex.type || '').toLowerCase().includes(term)
+            )
+        })
 
-    // Group by type
-    const grouped = visible.reduce((acc, ex) => {
-        if (!acc[ex.type]) acc[ex.type] = []
-        acc[ex.type].push(ex)
+    // Group by type (section)
+    const groupedExercises = visibleExercises.reduce((acc, ex) => {
+        const type = ex.type || 'Other'
+        if (!acc[type]) acc[type] = []
+        acc[type].push(ex)
         return acc
     }, {})
 
+    // Preset common inputs
     const repsOptions = [5, 8, 10, 12, 15, 20, 25, 30]
     const weightOptions = [5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100]
 
+    // Select exercise handler
     function handleSelectExercise(ex) {
         setExerciseId(ex.id)
         setSearchTerm(ex.name)
         setDropdownOpen(false)
     }
 
+    // Add workout handler — validation
+    function handleAddClick() {
+        if (!exerciseId) {
+            alert('Please select an exercise.')
+            return
+        }
+        if (!reps || !weight) {
+            alert('Please enter reps and weight.')
+            return
+        }
+        onAdd()
+        setReps('')
+        setWeight('')
+    }
+
     return (
         <div className="workout-form" ref={containerRef}>
-            {/* Exercise input + grouped dropdown */}
+            {/* Exercise selector */}
             <div className="exercise-select-container">
                 <input
                     type="text"
@@ -98,34 +122,41 @@ export default function WorkoutForm({
 
                 {dropdownOpen && (
                     <div className="dropdown-list">
-                        {Object.keys(grouped).length === 0 && (
-                            <div className="dropdown-empty">No exercises</div>
-                        )}
-
-                        {Object.entries(grouped).map(([type, exs]) => (
-                            <div key={type} className="dropdown-group">
-                                <div className="dropdown-type">{type}</div>
-                                {exs.map((ex) => (
-                                    <div
-                                        key={ex.id}
-                                        className={
-                                            'dropdown-item' +
-                                            (ex.id === exerciseId
-                                                ? ' selected'
-                                                : '')
-                                        }
-                                        onClick={() => handleSelectExercise(ex)}
-                                    >
-                                        {ex.name}
-                                    </div>
-                                ))}
+                        {Object.keys(groupedExercises).length === 0 ? (
+                            <div className="dropdown-empty">
+                                No exercises found
                             </div>
-                        ))}
+                        ) : (
+                            Object.entries(groupedExercises).map(
+                                ([type, list]) => (
+                                    <div key={type} className="dropdown-group">
+                                        <div className="dropdown-type">
+                                            {type}
+                                        </div>
+                                        {list.map((ex) => (
+                                            <div
+                                                key={ex.id}
+                                                className={`dropdown-item${
+                                                    ex.id === exerciseId
+                                                        ? ' selected'
+                                                        : ''
+                                                }`}
+                                                onClick={() =>
+                                                    handleSelectExercise(ex)
+                                                }
+                                            >
+                                                {ex.name}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            )
+                        )}
                     </div>
                 )}
             </div>
 
-            {/* Reps input with datalist (predefined but editable) */}
+            {/* Reps input */}
             <input
                 type="number"
                 list="reps-options"
@@ -140,7 +171,7 @@ export default function WorkoutForm({
                 ))}
             </datalist>
 
-            {/* Weight input with datalist */}
+            {/* Weight input */}
             <input
                 type="number"
                 list="weight-options"
@@ -155,7 +186,7 @@ export default function WorkoutForm({
                 ))}
             </datalist>
 
-            <button onClick={onAdd} className="add-button">
+            <button onClick={handleAddClick} className="add-button">
                 Add
             </button>
         </div>

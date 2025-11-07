@@ -12,10 +12,7 @@ import {
     Legend,
 } from 'chart.js'
 import './WorkoutSummary.css'
-import {
-    calculateSectionStats,
-    calculateWeeklyComparison,
-} from '../helpers/workout'
+import { WorkoutDay, WorkoutWeek } from '../models/workoutModels'
 
 ChartJS.register(
     CategoryScale,
@@ -38,67 +35,70 @@ export default function WorkoutSummary({ workouts }) {
         return <div className="summary-container">No workouts yet.</div>
     }
 
+    // ---------- Helpers ----------
+    const toYMD = (d) => new Date(d).toISOString().slice(0, 10)
+
     const today = new Date()
-    const weekStart = new Date(today)
-    weekStart.setDate(today.getDate() - today.getDay())
-    const prevWeekStart = new Date(weekStart)
-    prevWeekStart.setDate(prevWeekStart.getDate() - 7)
-    const prevWeekEnd = new Date(weekStart)
-    prevWeekEnd.setDate(prevWeekEnd.getDate() - 1)
+    const dayOfWeek = today.getDay()
+    const diffToMonday = (dayOfWeek + 6) % 7
+    const weekStartDate = new Date(today)
+    weekStartDate.setDate(today.getDate() - diffToMonday)
+    weekStartDate.setHours(0, 0, 0, 0)
 
-    const weekWorkouts = workouts.filter(
-        (w) => new Date(w.created_at) >= weekStart
-    )
-    const prevWeekWorkouts = workouts.filter(
-        (w) =>
-            new Date(w.created_at) >= prevWeekStart &&
-            new Date(w.created_at) <= prevWeekEnd
-    )
+    const prevWeekStartDate = new Date(weekStartDate)
+    prevWeekStartDate.setDate(weekStartDate.getDate() - 7)
+    prevWeekStartDate.setHours(0, 0, 0, 0)
 
-    const weekStats = calculateSectionStats(weekWorkouts)
-    const prevWeekStats = calculateSectionStats(prevWeekWorkouts)
-    const comparison = calculateWeeklyComparison(prevWeekWorkouts, weekWorkouts)
+    // ---------- Create WorkoutDay instances ----------
+    const createWorkoutDays = (workouts) => {
+        const grouped = workouts.reduce((acc, w) => {
+            const date = w.ymd || toYMD(w.created_at)
+            if (!acc[date]) acc[date] = []
+            acc[date].push(w)
+            return acc
+        }, {})
 
-    const sections = Object.keys(weekStats)
-
-    /** Helper to count workout days for averages */
-    const getWorkoutDaysCount = (workouts, section = null) => {
-        const days = new Set(
-            workouts
-                .filter((w) => (section ? w.exercises?.type === section : true))
-                .map((w) => w.created_at.slice(0, 10))
+        return Object.entries(grouped).map(
+            ([date, ws]) => new WorkoutDay(date, ws)
         )
-        return days.size || 1
     }
 
-    /** 📊 Bar chart comparing current vs previous week per section */
-    const createComparisonBarData = () => {
-        const labels = Object.keys(weekStats)
-        return {
-            labels,
-            datasets: [
-                {
-                    label: 'This Week (avg/day)',
-                    data: labels.map((type) =>
-                        Math.round(
-                            (weekStats[type]?.totalWeight || 0) /
-                                getWorkoutDaysCount(weekWorkouts, type)
-                        )
-                    ),
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                },
-                {
-                    label: 'Last Week (avg/day)',
-                    data: labels.map((type) =>
-                        Math.round(
-                            (prevWeekStats[type]?.totalWeight || 0) /
-                                getWorkoutDaysCount(prevWeekWorkouts, type)
-                        )
-                    ),
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                },
-            ],
-        }
+    const allDays = createWorkoutDays(workouts)
+    const thisWeekDays = allDays.filter(
+        (d) => new Date(d.date) >= weekStartDate
+    )
+    const lastWeekDays = allDays.filter(
+        (d) =>
+            new Date(d.date) >= prevWeekStartDate &&
+            new Date(d.date) < weekStartDate
+    )
+
+    const currentWeek = new WorkoutWeek(
+        weekStartDate,
+        thisWeekDays.flatMap((d) => d.workouts)
+    )
+    const previousWeek = new WorkoutWeek(
+        prevWeekStartDate,
+        lastWeekDays.flatMap((d) => d.workouts)
+    )
+    const weekComparison = currentWeek.compareTo(previousWeek)
+
+    // ---------- Weekly avg chart ----------
+    const weeklyAvgBarData = {
+        labels: ['Previous Week', 'Current Week'],
+        datasets: [
+            {
+                label: 'Weekly Avg Load (kg/day)',
+                data: [
+                    previousWeek.avgLoadPerDay.toFixed(0),
+                    currentWeek.avgLoadPerDay.toFixed(0),
+                ],
+                backgroundColor: [
+                    'rgba(255,99,132,0.5)',
+                    'rgba(75,192,192,0.6)',
+                ],
+            },
+        ],
     }
 
     const barOptions = (title) => ({
@@ -110,301 +110,234 @@ export default function WorkoutSummary({ workouts }) {
         scales: {
             y: {
                 beginAtZero: true,
-                title: { display: true, text: 'Load (kg)' },
+                title: { display: true, text: 'Load (kg/day)' },
             },
             x: { title: { display: true, text: 'Section' } },
         },
     })
 
-    /** 🧮 Helpers for exercise + section line charts */
-    const getHistory = (filterFn) => {
-        const dailyMap = {}
-        workouts.forEach((w) => {
-            if (!filterFn(w)) return
-            const d = w.created_at.slice(0, 10)
-            const load = (w.weight || 0) * (w.reps || 0)
-            dailyMap[d] = (dailyMap[d] || 0) + load
-        })
-        return Object.entries(dailyMap)
-            .map(([date, totalWeight]) => ({ date, totalWeight }))
-            .sort((a, b) => new Date(a.date) - new Date(b.date))
-    }
-
-    // Weekly average per day for overall
-    const prevWeekDays =
-        new Set(prevWeekWorkouts.map((w) => w.created_at.slice(0, 10))).size ||
-        1
-    const currWeekDays =
-        new Set(weekWorkouts.map((w) => w.created_at.slice(0, 10))).size || 1
-
-    const prevWeekAvg = Math.round(
-        Object.values(prevWeekStats).reduce(
-            (sum, s) => sum + s.totalWeight,
-            0
-        ) / prevWeekDays
-    )
-    const currWeekAvg = Math.round(
-        Object.values(weekStats).reduce((sum, s) => sum + s.totalWeight, 0) /
-            currWeekDays
-    )
-
-    const weeklyAvgBarData = {
-        labels: ['Previous Week', 'Current Week'],
-        datasets: [
-            {
-                label: 'Weekly Avg Load (kg/day)',
-                data: [prevWeekAvg, currWeekAvg],
-                backgroundColor: [
-                    'rgba(255,99,132,0.5)',
-                    'rgba(75,192,192,0.6)',
-                ],
-            },
-        ],
-    }
-
-    const weeklyAvgBarOptions = {
-        responsive: true,
-        plugins: {
-            legend: { display: false },
-            title: { display: true, text: 'Weekly Average Comparison' },
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Load (kg/day)' },
-            },
-            x: { title: { display: true, text: 'Week' } },
-        },
-    }
-
+    // ---------- Render ----------
     return (
         <div className="summary-container">
-            {/* === TOTAL SUMMARY === */}
+            {/* Overall Summary */}
             <div className="summary-section">
                 <h2
                     className="collapsible-header"
                     onClick={() => toggleSection('total')}
                 >
-                    🧮 Overall Summary
+                    🧮 Overall Summary ({toYMD(weekStartDate)} — {toYMD(today)})
                 </h2>
+
                 {openSections.total && (
                     <>
-                        <div className="bar-chart-container">
-                            <Bar
-                                data={createComparisonBarData()}
-                                options={barOptions('Current vs Previous Week')}
-                            />
+                        <div className="stats-row">
+                            <div className="stats-block">
+                                <strong>Total Weekly Load</strong>{' '}
+                                {currentWeek.totalLoad.toLocaleString()} kg
+                            </div>
+                            <div
+                                className={`stats-block ${
+                                    weekComparison.overall.diff > 0
+                                        ? 'red-positive'
+                                        : weekComparison.overall.diff < 0
+                                        ? 'green-negative'
+                                        : 'neutral'
+                                }`}
+                            >
+                                <strong>Δ vs Last Week</strong>{' '}
+                                {weekComparison.overall.diff > 0
+                                    ? `+${weekComparison.overall.diff}`
+                                    : weekComparison.overall.diff}{' '}
+                                kg
+                            </div>
                         </div>
+
                         <div
                             className="bar-chart-container"
-                            style={{ marginTop: '20px' }}
+                            style={{ marginTop: 20 }}
                         >
                             <Bar
                                 data={weeklyAvgBarData}
-                                options={weeklyAvgBarOptions}
+                                options={{
+                                    ...barOptions('Weekly Average Comparison'),
+                                    plugins: { legend: { display: false } },
+                                }}
                             />
-                        </div>
-                        <div className="section-totals">
-                            <span>
-                                Overall Load (This Week):{' '}
-                                <strong>
-                                    {Object.values(weekStats).reduce(
-                                        (s, a) => s + a.totalWeight,
-                                        0
-                                    )}{' '}
-                                    kg
-                                </strong>
-                            </span>
-                            <span>
-                                Δ vs Last Week:{' '}
-                                <strong
-                                    className={
-                                        comparison.overallDiff > 0
-                                            ? 'positive'
-                                            : comparison.overallDiff < 0
-                                            ? 'negative'
-                                            : 'neutral'
-                                    }
-                                >
-                                    {comparison.overallDiff > 0 ? '+' : ''}
-                                    {comparison.overallDiff} kg
-                                </strong>
-                            </span>
-                            <span>
-                                Weekly Avg Δ:{' '}
-                                <strong
-                                    className={
-                                        comparison.overallAvgDiff > 0
-                                            ? 'positive'
-                                            : comparison.overallAvgDiff < 0
-                                            ? 'negative'
-                                            : 'neutral'
-                                    }
-                                >
-                                    {comparison.overallAvgDiff > 0 ? '+' : ''}
-                                    {comparison.overallAvgDiff} kg/day
-                                </strong>
-                            </span>
                         </div>
                     </>
                 )}
             </div>
 
-            {/* === SECTION-BY-SECTION === */}
-            {sections.map((type) => {
-                const data = weekStats[type]
-                const prev = prevWeekStats[type]
-
-                const sectionAvgThisWeek =
-                    (data?.totalWeight || 0) /
-                    getWorkoutDaysCount(weekWorkouts, type)
-                const sectionAvgPrevWeek =
-                    (prev?.totalWeight || 0) /
-                    getWorkoutDaysCount(prevWeekWorkouts, type)
-                const sectionDiffAvg = Math.round(
-                    sectionAvgThisWeek - sectionAvgPrevWeek
-                )
-
-                const sectionHistory = getHistory(
-                    (w) => w.exercises?.type === type
-                )
-
-                return (
-                    <div key={type} className="summary-section">
-                        <h3
-                            className="collapsible-header"
-                            onClick={() => toggleSection(type)}
-                        >
-                            {type}{' '}
-                            <span
-                                className={
-                                    sectionDiffAvg > 0
-                                        ? 'positive'
-                                        : sectionDiffAvg < 0
-                                        ? 'negative'
-                                        : 'neutral'
-                                }
+            {/* Section Summaries */}
+            {Object.entries(weekComparison)
+                .filter(([k]) => k !== 'overall')
+                .map(([sectionName, sectionStats]) => {
+                    const key = `section-${sectionName}`
+                    return (
+                        <div key={key} className="summary-section">
+                            <h3
+                                className="collapsible-header"
+                                onClick={() => toggleSection(key)}
                             >
-                                ({sectionDiffAvg > 0 ? '+' : ''}
-                                {sectionDiffAvg} kg/day vs last week)
-                            </span>
-                        </h3>
+                                {sectionName}{' '}
+                                <span
+                                    className={
+                                        sectionStats.toGoVsLastWeek > 0
+                                            ? 'positive'
+                                            : sectionStats.toGoVsLastWeek < 0
+                                            ? 'negative'
+                                            : 'neutral'
+                                    }
+                                >
+                                    (
+                                    {sectionStats.toGoVsLastWeek > 0 ? '+' : ''}
+                                    {sectionStats.toGoVsLastWeek} kg vs last
+                                    week)
+                                </span>
+                            </h3>
 
-                        {openSections[type] && (
-                            <>
-                                {/* Section Line Chart */}
-                                {sectionHistory.length > 0 && (
-                                    <div className="section-chart">
-                                        <Line
-                                            data={{
-                                                labels: sectionHistory.map(
-                                                    (h) => h.date
-                                                ),
-                                                datasets: [
-                                                    {
-                                                        label: `${type} Load`,
-                                                        data: sectionHistory.map(
-                                                            (h) => h.totalWeight
-                                                        ),
-                                                        borderColor: '#1f78b4',
-                                                        tension: 0.3,
-                                                        fill: false,
-                                                    },
-                                                ],
-                                            }}
-                                            options={barOptions(
-                                                `${type} Load Over Time`
-                                            )}
-                                        />
-                                    </div>
-                                )}
+                            {openSections[key] && (
+                                <>
+                                    <p>
+                                        Previous Total:{' '}
+                                        {sectionStats.previousLoad.toLocaleString()}{' '}
+                                        kg
+                                        <br />
+                                        Current Total:{' '}
+                                        {sectionStats.currentLoad.toLocaleString()}{' '}
+                                        kg
+                                        <br />
+                                        Weekly Avg:{' '}
+                                        {sectionStats.avgWeeklyLoad.toLocaleString()}{' '}
+                                        kg/day
+                                    </p>
 
-                                {/* Exercise breakdown */}
-                                <div className="exercise-cards">
-                                    {Object.entries(data?.exercises || {}).map(
-                                        ([name, statsEx]) => {
-                                            const exHistory = getHistory(
-                                                (w) =>
-                                                    w.exercises?.name ===
-                                                        name &&
-                                                    w.exercises?.type === type
+                                    {/* Per-exercise breakdown with historical graph */}
+                                    <div className="exercise-breakdown">
+                                        {Object.entries(
+                                            new WorkoutWeek(
+                                                weekStartDate,
+                                                workouts // <-- use all historical workouts here
+                                            ).getSection(sectionName)
+                                                ?.exercises || {}
+                                        ).map(([exName, exSets]) => {
+                                            // Calculate stats for current week
+                                            const totalWeight = exSets.reduce(
+                                                (sum, s) =>
+                                                    sum +
+                                                    (s.weight || 0) *
+                                                        (s.reps || 0),
+                                                0
+                                            )
+                                            const totalReps = exSets.reduce(
+                                                (sum, s) => sum + (s.reps || 0),
+                                                0
+                                            )
+                                            const bestSet = exSets.reduce(
+                                                (max, s) =>
+                                                    Math.max(
+                                                        max,
+                                                        (s.weight || 0) *
+                                                            (s.reps || 0)
+                                                    ),
+                                                0
+                                            )
+                                            const lastMax = Math.max(
+                                                ...exSets.map(
+                                                    (s) => s.weight || 0
+                                                )
                                             )
 
-                                            const exChart = {
-                                                labels: exHistory.map(
-                                                    (h) => h.date
-                                                ),
+                                            // Historical data for graph (all workouts)
+                                            const dailyMap = {}
+                                            workouts
+                                                .filter(
+                                                    (w) =>
+                                                        w.exercises?.name ===
+                                                            exName &&
+                                                        w.exercises?.type ===
+                                                            sectionName
+                                                )
+                                                .forEach((w) => {
+                                                    const ymd = toYMD(
+                                                        w.created_at
+                                                    )
+                                                    const load =
+                                                        (w.weight || 0) *
+                                                        (w.reps || 0)
+                                                    dailyMap[ymd] =
+                                                        (dailyMap[ymd] || 0) +
+                                                        load
+                                                })
+
+                                            const sortedDates =
+                                                Object.keys(dailyMap).sort()
+                                            const exerciseChartData = {
+                                                labels: sortedDates,
                                                 datasets: [
                                                     {
-                                                        label: name,
-                                                        data: exHistory.map(
-                                                            (h) => h.totalWeight
+                                                        label: `${exName} Load Over Time`,
+                                                        data: sortedDates.map(
+                                                            (d) => dailyMap[d]
                                                         ),
-                                                        borderColor: '#2e8b57',
+                                                        borderColor: '#1f78b4',
+                                                        backgroundColor:
+                                                            'rgba(31, 120, 180, 0.2)',
+                                                        fill: true,
                                                         tension: 0.3,
-                                                        fill: false,
                                                     },
                                                 ],
                                             }
 
                                             return (
                                                 <div
-                                                    key={name}
+                                                    key={exName}
                                                     className="exercise-card"
                                                 >
-                                                    <div className="exercise-header">
-                                                        {name}
-                                                    </div>
-                                                    <div className="exercise-info">
-                                                        <span>
+                                                    <strong>{exName}</strong>
+                                                    <div className="stats-row">
+                                                        <div className="stats-block">
                                                             Total Weight:{' '}
-                                                            {
-                                                                statsEx.totalWeight
-                                                            }{' '}
+                                                            {totalWeight.toLocaleString()}{' '}
                                                             kg
-                                                        </span>
-                                                        <span>
-                                                            Total Reps:{' '}
-                                                            {statsEx.totalReps ||
-                                                                0}
-                                                        </span>
-                                                        <span>
-                                                            Best Set:{' '}
-                                                            {statsEx.bestWeight ||
-                                                                0}{' '}
-                                                            kg·rep
-                                                        </span>
-                                                    </div>
-                                                    {exHistory.length > 0 && (
-                                                        <div className="exercise-chart">
-                                                            <Line
-                                                                data={exChart}
-                                                                options={{
-                                                                    responsive: true,
-                                                                    plugins: {
-                                                                        legend: {
-                                                                            display: false,
-                                                                        },
-                                                                    },
-                                                                    scales: {
-                                                                        y: {
-                                                                            beginAtZero: true,
-                                                                        },
-                                                                    },
-                                                                }}
-                                                            />
                                                         </div>
-                                                    )}
+                                                        <div className="stats-block">
+                                                            Total Reps:{' '}
+                                                            {totalReps}
+                                                        </div>
+                                                        <div className="stats-block">
+                                                            Best Set: {bestSet}{' '}
+                                                            kg·rep
+                                                        </div>
+                                                        <div className="stats-block">
+                                                            Last Max: {lastMax}{' '}
+                                                            kg
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        className="exercise-chart"
+                                                        style={{
+                                                            marginTop: 10,
+                                                        }}
+                                                    >
+                                                        <Line
+                                                            data={
+                                                                exerciseChartData
+                                                            }
+                                                            options={barOptions(
+                                                                `${exName} Load Over Time`
+                                                            )}
+                                                        />
+                                                    </div>
                                                 </div>
                                             )
-                                        }
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                )
-            })}
+                                        })}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )
+                })}
         </div>
     )
 }

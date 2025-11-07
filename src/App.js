@@ -26,6 +26,12 @@ export default function App() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
 
+    const today = new Date()
+    const dayOfWeek = today.getDay() // 0 = Sunday, 1 = Monday ...
+    const diffToMonday = (dayOfWeek + 6) % 7 // days to subtract to get Monday
+    const weekStartDate = new Date(today)
+    weekStartDate.setDate(today.getDate() - diffToMonday)
+    weekStartDate.setHours(0, 0, 0, 0)
     // Get logged-in user session
     useEffect(() => {
         async function getUser() {
@@ -211,12 +217,12 @@ export default function App() {
                             hiddenExercises={hiddenExercises}
                         />
                         <WorkoutList
-                            workouts={todayWorkouts}
+                            workouts={workouts}
                             onDelete={handleDelete}
                             onEdit={handleEdit}
                             hideDate={true}
-                            weeklyAverages={weeklyAverages}
-                            prevStats={prevStats} // <-- both section & exercise stats
+                            prevStats={prevStats} // contains sections, exercises, overall totals (from models)
+                            weekStart={weekStartDate} // optional: for display
                         />
                     </>
                 )}
