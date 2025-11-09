@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { WorkoutWeek, WorkoutDay, SectionModel } from '../models/workoutModels'
+import { WorkoutWeek, WorkoutDay } from '../models/workoutModels'
 
 export function groupWorkouts(workouts) {
     const grouped = {}
@@ -27,41 +27,49 @@ export default function WorkoutList({
     const [collapsedTypes, setCollapsedTypes] = useState({})
     const [collapsedExercises, setCollapsedExercises] = useState({})
 
+    // ---------- Collapsing ----------
     const toggleDate = (date) =>
-        setCollapsedDates({ ...collapsedDates, [date]: !collapsedDates[date] })
+        setCollapsedDates((p) => ({ ...p, [date]: !p[date] }))
     const toggleType = (date, type) => {
         const key = `${date}-${type}`
-        setCollapsedTypes({ ...collapsedTypes, [key]: !collapsedTypes[key] })
+        setCollapsedTypes((p) => ({ ...p, [key]: !p[key] }))
     }
     const toggleExercise = (date, type, name) => {
         const key = `${date}-${type}-${name}`
-        setCollapsedExercises({
-            ...collapsedExercises,
-            [key]: !collapsedExercises[key],
-        })
+        setCollapsedExercises((p) => ({ ...p, [key]: !p[key] }))
     }
 
     if (!workouts || workouts.length === 0)
         return <p className="no-workouts">No workouts yet.</p>
 
-    const grouped = groupWorkouts(workouts)
+    // ---------- Filter for display ----------
+    const todayYMD = new Date().toISOString().slice(0, 10)
+    const displayWorkouts = hideDate
+        ? workouts.filter(
+              (w) =>
+                  (w.ymd ||
+                      new Date(w.created_at).toISOString().slice(0, 10)) ===
+                  todayYMD
+          )
+        : workouts
 
-    // --- Weekly comparison using WorkoutWeek model ---
-    function createWorkoutDays(workouts) {
-        const groupedByDate = workouts.reduce((acc, w) => {
+    // ---------- Grouped display ----------
+    const grouped = groupWorkouts(displayWorkouts)
+
+    // ---------- For comparisons, still use all workouts ----------
+    function createWorkoutDays(all) {
+        const groupedByDate = all.reduce((acc, w) => {
             const date =
                 w.ymd || new Date(w.created_at).toISOString().slice(0, 10)
             if (!acc[date]) acc[date] = []
             acc[date].push(w)
             return acc
         }, {})
-
         return Object.entries(groupedByDate).map(
             ([date, ws]) => new WorkoutDay(date, ws)
         )
     }
 
-    // --- Compute current and previous week ---
     const today = new Date()
     const dayOfWeek = today.getDay()
     const monday = new Date(today)
@@ -72,10 +80,7 @@ export default function WorkoutList({
     oneWeekAgo.setDate(monday.getDate() - 7)
     oneWeekAgo.setHours(0, 0, 0, 0)
 
-    // 1️⃣ Create all WorkoutDay instances
     const allWorkoutDays = createWorkoutDays(workouts)
-
-    // 2️⃣ Filter by week
     const thisWeekWorkoutDays = allWorkoutDays.filter(
         (wd) => new Date(wd.date) >= monday
     )
@@ -83,7 +88,6 @@ export default function WorkoutList({
         (wd) => new Date(wd.date) >= oneWeekAgo && new Date(wd.date) < monday
     )
 
-    // 3️⃣ Create WorkoutWeek instances using the filtered workouts
     const currentWeek = new WorkoutWeek(
         monday,
         thisWeekWorkoutDays.flatMap((wd) => wd.workouts)
@@ -93,18 +97,17 @@ export default function WorkoutList({
         lastWeekWorkoutDays.flatMap((wd) => wd.workouts)
     )
 
-    // 4️⃣ Compare weeks
     const weekComparison = currentWeek.compareTo(previousWeek)
-
     const overall = weekComparison.overall || {}
 
+    // ---------- RENDER ----------
     return (
         <div className="workout-list-container">
-            {/* Overall Weekly Load */}
+            {/* Weekly Summary (for current tab) */}
             {hideDate && (
                 <div className="overall-weekly-stats stats-row">
                     <div className="stats-block">
-                        <strong>Total Weekly Load</strong>
+                        <strong>Total Weekly Load</strong>{' '}
                         {(overall.totalLoad || 0).toLocaleString()} kg
                     </div>
                     <div
@@ -116,7 +119,7 @@ export default function WorkoutList({
                                 : 'neutral'
                         }`}
                     >
-                        <strong>Δ vs Last Week</strong>
+                        <strong>Δ vs Last Week</strong>{' '}
                         {(overall.diff > 0
                             ? `+${overall.diff}`
                             : overall.diff || 0
@@ -126,7 +129,7 @@ export default function WorkoutList({
                 </div>
             )}
 
-            {/* Grouped by Date */}
+            {/* Grouped Workouts */}
             {Object.entries(grouped).map(([date, types]) => {
                 const showDate = !hideDate
                 return (
@@ -218,33 +221,35 @@ export default function WorkoutList({
                                                     const exKey = `${date}-${type}-${name}`
                                                     const totalWeight =
                                                         sets.reduce(
-                                                            (sum, s) =>
-                                                                sum +
-                                                                (s.reps || 0) *
-                                                                    (s.weight ||
+                                                            (s, x) =>
+                                                                s +
+                                                                (x.weight ||
+                                                                    0) *
+                                                                    (x.reps ||
                                                                         0),
                                                             0
                                                         )
                                                     const totalReps =
                                                         sets.reduce(
-                                                            (sum, s) =>
-                                                                sum +
-                                                                (s.reps || 0),
+                                                            (s, x) =>
+                                                                s +
+                                                                (x.reps || 0),
                                                             0
                                                         )
                                                     const bestSet = sets.reduce(
-                                                        (max, s) =>
+                                                        (m, x) =>
                                                             Math.max(
-                                                                max,
-                                                                (s.reps || 0) *
-                                                                    (s.weight ||
+                                                                m,
+                                                                (x.weight ||
+                                                                    0) *
+                                                                    (x.reps ||
                                                                         0)
                                                             ),
                                                         0
                                                     )
                                                     const lastMax = Math.max(
                                                         ...sets.map(
-                                                            (s) => s.weight || 0
+                                                            (x) => x.weight || 0
                                                         )
                                                     )
 
@@ -326,8 +331,7 @@ export default function WorkoutList({
                                                                                 Total
                                                                                 Weight
                                                                             </strong>{' '}
-                                                                            {totalWeight?.toLocaleString() ||
-                                                                                0}{' '}
+                                                                            {totalWeight.toLocaleString()}{' '}
                                                                             kg
                                                                         </div>
                                                                         <div className="stats-block">
@@ -335,16 +339,18 @@ export default function WorkoutList({
                                                                                 Total
                                                                                 Reps
                                                                             </strong>{' '}
-                                                                            {totalReps ||
-                                                                                0}
+                                                                            {
+                                                                                totalReps
+                                                                            }
                                                                         </div>
                                                                         <div className="stats-block">
                                                                             <strong>
                                                                                 Best
                                                                                 Set
                                                                             </strong>{' '}
-                                                                            {bestSet ||
-                                                                                0}{' '}
+                                                                            {
+                                                                                bestSet
+                                                                            }{' '}
                                                                             kg·rep
                                                                         </div>
                                                                         <div className="stats-block">
@@ -352,8 +358,9 @@ export default function WorkoutList({
                                                                                 Last
                                                                                 Max
                                                                             </strong>{' '}
-                                                                            {lastMax ||
-                                                                                0}{' '}
+                                                                            {
+                                                                                lastMax
+                                                                            }{' '}
                                                                             kg
                                                                         </div>
                                                                     </div>
