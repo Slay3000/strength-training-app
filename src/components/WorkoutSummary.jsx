@@ -82,6 +82,43 @@ export default function WorkoutSummary({ workouts }) {
         lastWeekDays.flatMap((d) => d.workouts)
     )
     const weekComparison = currentWeek.compareTo(previousWeek)
+    // ---------- Weekly comparison by section (bar chart) ----------
+    const sectionLabels = Object.keys(weekComparison).filter(
+        (k) => k !== 'overall'
+    )
+    const sectionComparisonBarData = {
+        labels: sectionLabels,
+        datasets: [
+            {
+                label: 'Previous Week',
+                data: sectionLabels.map(
+                    (t) => weekComparison[t]?.previousLoad || 0
+                ),
+                backgroundColor: 'rgba(255,99,132,0.6)',
+            },
+            {
+                label: 'Current Week',
+                data: sectionLabels.map(
+                    (t) => weekComparison[t]?.currentLoad || 0
+                ),
+                backgroundColor: 'rgba(75,192,192,0.6)',
+            },
+        ],
+    }
+    const sectionBarOptions = {
+        responsive: true,
+        plugins: {
+            title: { display: true, text: 'Weekly Load by Section' },
+            legend: { display: true },
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Load (kg)' },
+            },
+            x: { title: { display: true, text: 'Section' } },
+        },
+    }
 
     // ---------- Weekly avg chart ----------
     const weeklyAvgBarData = {
@@ -162,6 +199,15 @@ export default function WorkoutSummary({ workouts }) {
                                     ...barOptions('Weekly Average Comparison'),
                                     plugins: { legend: { display: false } },
                                 }}
+                            />
+                        </div>
+                        <div
+                            className="bar-chart-container"
+                            style={{ marginTop: 30 }}
+                        >
+                            <Bar
+                                data={sectionComparisonBarData}
+                                options={sectionBarOptions}
                             />
                         </div>
                     </>

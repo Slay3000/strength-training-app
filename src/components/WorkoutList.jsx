@@ -18,7 +18,7 @@ export function groupWorkouts(workouts) {
 }
 
 export default function WorkoutList({
-    workouts,
+    workouts, // all workouts passed in (used for historical lookups)
     onDelete,
     onEdit,
     hideDate = false,
@@ -42,7 +42,7 @@ export default function WorkoutList({
     if (!workouts || workouts.length === 0)
         return <p className="no-workouts">No workouts yet.</p>
 
-    // ---------- Filter for display ----------
+    // ---------- Filter for display (Current tab shows only today) ----------
     const todayYMD = new Date().toISOString().slice(0, 10)
     const displayWorkouts = hideDate
         ? workouts.filter(
@@ -56,7 +56,7 @@ export default function WorkoutList({
     // ---------- Grouped display ----------
     const grouped = groupWorkouts(displayWorkouts)
 
-    // ---------- For comparisons, still use all workouts ----------
+    // ---------- Helper: create WorkoutDay instances from any list ----------
     function createWorkoutDays(all) {
         const groupedByDate = all.reduce((acc, w) => {
             const date =
@@ -70,6 +70,7 @@ export default function WorkoutList({
         )
     }
 
+    // ---------- Week bounds (Monday start) ----------
     const today = new Date()
     const dayOfWeek = today.getDay()
     const monday = new Date(today)
@@ -80,6 +81,7 @@ export default function WorkoutList({
     oneWeekAgo.setDate(monday.getDate() - 7)
     oneWeekAgo.setHours(0, 0, 0, 0)
 
+    // ---------- Build week models from whole history (workouts prop) ----------
     const allWorkoutDays = createWorkoutDays(workouts)
     const thisWeekWorkoutDays = allWorkoutDays.filter(
         (wd) => new Date(wd.date) >= monday
@@ -100,10 +102,27 @@ export default function WorkoutList({
     const weekComparison = currentWeek.compareTo(previousWeek)
     const overall = weekComparison.overall || {}
 
+    // ---------- Helper: last max before a date for an exercise ----------
+    // searches the full `workouts` array (historical) for entries with same exercise & section
+    // and date strictly earlier than `dateYmd`, returns max weight (0 if none)
+    function getLastMaxBefore(exerciseName, sectionName, dateYmd) {
+        if (!exerciseName) return 0
+        let max = 0
+        for (const w of workouts) {
+            const y = w.ymd || new Date(w.created_at).toISOString().slice(0, 10)
+            if (y >= dateYmd) continue // only consider strictly earlier
+            if (w.exercises?.name !== exerciseName) continue
+            if (sectionName && w.exercises?.type !== sectionName) continue
+            const wt = Number(w.weight) || 0
+            if (wt > max) max = wt
+        }
+        return max
+    }
+
     // ---------- RENDER ----------
     return (
         <div className="workout-list-container">
-            {/* Weekly Summary (for current tab) */}
+            {/* Weekly Summary */}
             {hideDate && (
                 <div className="overall-weekly-stats stats-row">
                     <div className="stats-block">
@@ -129,7 +148,7 @@ export default function WorkoutList({
                 </div>
             )}
 
-            {/* Grouped Workouts */}
+            {/* Grouped by Date for displayWorkouts */}
             {Object.entries(grouped).map(([date, types]) => {
                 const showDate = !hideDate
                 return (
@@ -247,11 +266,14 @@ export default function WorkoutList({
                                                             ),
                                                         0
                                                     )
-                                                    const lastMax = Math.max(
-                                                        ...sets.map(
-                                                            (x) => x.weight || 0
+
+                                                    // --- lastMax: look into entire history before this date ---
+                                                    const lastMax =
+                                                        getLastMaxBefore(
+                                                            name,
+                                                            type,
+                                                            date
                                                         )
-                                                    )
 
                                                     return (
                                                         <div
