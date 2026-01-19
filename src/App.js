@@ -16,6 +16,9 @@ export default function App() {
     const [exerciseId, setExerciseId] = useState('')
     const [reps, setReps] = useState('')
     const [weight, setWeight] = useState('')
+    const [entries, setEntries] = useState([
+        { exercise: null, weight: '', reps: '' },
+    ])
     const [tab, setTab] = useState('current')
     const [hiddenExercises, setHiddenExercises] = useState([])
     const [editingId, setEditingId] = useState(null)
@@ -55,12 +58,36 @@ export default function App() {
         const { data, error } = await supabase
             .from('workouts')
             .select(
-                'id, reps, weight, created_at, exercise_id, exercises(name, type)'
+                'id, reps, weight, created_at, exercise_id, exercises(name, type)',
             )
             .eq('user_id', USER_ID)
             .order('created_at', { ascending: false })
         if (error) console.error(error)
         else setWorkouts(data || [])
+    }
+
+    async function handleAddEntries(entries) {
+        const payload = entries.map((e) => ({
+            user_id: USER_ID,
+            exercise_id: e.exerciseId,
+            reps: parseInt(e.reps),
+            weight: parseFloat(e.weight),
+        }))
+
+        const { data, error } = await supabase
+            .from('workouts')
+            .insert(payload)
+            .select(
+                'id, reps, weight, created_at, exercise_id, exercises(name, type)',
+            )
+
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        // prepend new workouts
+        setWorkouts((prev) => [...data, ...prev])
     }
 
     // Add or edit workout
@@ -76,12 +103,14 @@ export default function App() {
                     weight: parseFloat(weight),
                 })
                 .eq('id', editingId)
-                .select('id, reps, weight, created_at, exercises(name, type)')
+                .select(
+                    'id, reps, weight, exercise_id, created_at, exercises(name, type)',
+                )
 
             if (error) console.error(error)
             else
                 setWorkouts(
-                    workouts.map((w) => (w.id === editingId ? data[0] : w))
+                    workouts.map((w) => (w.id === editingId ? data[0] : w)),
                 )
 
             setEditingId(null)
@@ -160,7 +189,7 @@ export default function App() {
     // inside App.js, before return
     const todayStr = new Date().toISOString().slice(0, 10)
     const todayWorkouts = workouts.filter(
-        (w) => w.created_at.slice(0, 10) === todayStr
+        (w) => w.created_at.slice(0, 10) === todayStr,
     )
 
     // Call it
@@ -207,15 +236,11 @@ export default function App() {
                 {tab === 'current' && (
                     <>
                         <WorkoutForm
-                            exerciseId={exerciseId}
-                            setExerciseId={setExerciseId}
-                            reps={reps}
-                            setReps={setReps}
-                            weight={weight}
-                            setWeight={setWeight}
-                            onAdd={handleAddOrEdit}
+                            workouts={workouts}
+                            onAdd={handleAddEntries}
                             hiddenExercises={hiddenExercises}
                         />
+
                         <WorkoutList
                             workouts={workouts}
                             onDelete={handleDelete}

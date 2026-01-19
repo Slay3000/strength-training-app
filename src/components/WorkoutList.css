@@ -1,0 +1,68 @@
+.pr-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 12px 0;
+    border-radius: 6px;
+    background: #f7f7f7;
+}
+
+.pr-box .stats-block {
+    flex: 0 1 auto; /* shrink or grow as needed */
+    white-space: nowrap; /* keep label+value together */
+    padding: 4px 8px;
+}
+
+/* PROGRESS COLORS */
+.progress-excellent {
+    color: #2e8b57; /* green */
+    font-weight: bold;
+}
+
+.progress-good {
+    color: #d4a017; /* yellow/gold */
+    font-weight: bold;
+}
+
+.progress-new-pr {
+    color: #1f78d1; /* blue */
+    font-weight: bold;
+}
+
+/* REMAINING COLORS */
+.remaining-hit-pr {
+    color: #2e8b57; /* green */
+    font-weight: bold;
+}
+
+.remaining-close {
+    color: #d4a017; /* yellow/gold */
+    font-weight: bold;
+}
+
+@media (max-width: 760px) {
+    /* Make PR stats full-width on mobile */
+    .pr-box .stats-block {
+        flex: 1 1 100%;
+        width: 100%;
+        display: block;
+        padding: 12px 0;
+        font-size: 16px;
+    }
+}
+
+.pr-toggle-button {
+    background: #e9e9e9;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 8px 0;
+}
+
+.pr-toggle-button:hover {
+    background: #dcdcdc;
+}

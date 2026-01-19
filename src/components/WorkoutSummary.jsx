@@ -22,7 +22,7 @@ ChartJS.register(
     BarElement,
     Title,
     Tooltip,
-    Legend
+    Legend,
 )
 
 export default function WorkoutSummary({ workouts }) {
@@ -59,32 +59,32 @@ export default function WorkoutSummary({ workouts }) {
         }, {})
 
         return Object.entries(grouped).map(
-            ([date, ws]) => new WorkoutDay(date, ws)
+            ([date, ws]) => new WorkoutDay(date, ws),
         )
     }
 
     const allDays = createWorkoutDays(workouts)
     const thisWeekDays = allDays.filter(
-        (d) => new Date(d.date) >= weekStartDate
+        (d) => new Date(d.date) >= weekStartDate,
     )
     const lastWeekDays = allDays.filter(
         (d) =>
             new Date(d.date) >= prevWeekStartDate &&
-            new Date(d.date) < weekStartDate
+            new Date(d.date) < weekStartDate,
     )
 
     const currentWeek = new WorkoutWeek(
         weekStartDate,
-        thisWeekDays.flatMap((d) => d.workouts)
+        thisWeekDays.flatMap((d) => d.workouts),
     )
     const previousWeek = new WorkoutWeek(
         prevWeekStartDate,
-        lastWeekDays.flatMap((d) => d.workouts)
+        lastWeekDays.flatMap((d) => d.workouts),
     )
     const weekComparison = currentWeek.compareTo(previousWeek)
     // ---------- Weekly comparison by section (bar chart) ----------
     const sectionLabels = Object.keys(weekComparison).filter(
-        (k) => k !== 'overall'
+        (k) => k !== 'overall',
     )
     const sectionComparisonBarData = {
         labels: sectionLabels,
@@ -92,14 +92,14 @@ export default function WorkoutSummary({ workouts }) {
             {
                 label: 'Previous Week',
                 data: sectionLabels.map(
-                    (t) => weekComparison[t]?.previousLoad || 0
+                    (t) => weekComparison[t]?.previousLoad || 0,
                 ),
                 backgroundColor: 'rgba(255,99,132,0.6)',
             },
             {
                 label: 'Current Week',
                 data: sectionLabels.map(
-                    (t) => weekComparison[t]?.currentLoad || 0
+                    (t) => weekComparison[t]?.currentLoad || 0,
                 ),
                 backgroundColor: 'rgba(75,192,192,0.6)',
             },
@@ -177,8 +177,8 @@ export default function WorkoutSummary({ workouts }) {
                                     weekComparison.overall.diff > 0
                                         ? 'red-positive'
                                         : weekComparison.overall.diff < 0
-                                        ? 'green-negative'
-                                        : 'neutral'
+                                          ? 'green-negative'
+                                          : 'neutral'
                                 }`}
                             >
                                 <strong>Δ vs Last Week</strong>{' '}
@@ -231,8 +231,8 @@ export default function WorkoutSummary({ workouts }) {
                                         sectionStats.toGoVsLastWeek > 0
                                             ? 'positive'
                                             : sectionStats.toGoVsLastWeek < 0
-                                            ? 'negative'
-                                            : 'neutral'
+                                              ? 'negative'
+                                              : 'neutral'
                                     }
                                 >
                                     (
@@ -263,9 +263,9 @@ export default function WorkoutSummary({ workouts }) {
                                         {Object.entries(
                                             new WorkoutWeek(
                                                 weekStartDate,
-                                                workouts // <-- use all historical workouts here
+                                                workouts, // <-- use all historical workouts here
                                             ).getSection(sectionName)
-                                                ?.exercises || {}
+                                                ?.exercises || {},
                                         ).map(([exName, exSets]) => {
                                             // Calculate stats for current week
                                             const totalWeight = exSets.reduce(
@@ -273,26 +273,77 @@ export default function WorkoutSummary({ workouts }) {
                                                     sum +
                                                     (s.weight || 0) *
                                                         (s.reps || 0),
-                                                0
+                                                0,
                                             )
                                             const totalReps = exSets.reduce(
                                                 (sum, s) => sum + (s.reps || 0),
-                                                0
+                                                0,
                                             )
                                             const bestSet = exSets.reduce(
                                                 (max, s) =>
                                                     Math.max(
                                                         max,
                                                         (s.weight || 0) *
-                                                            (s.reps || 0)
+                                                            (s.reps || 0),
                                                     ),
-                                                0
+                                                0,
                                             )
                                             const lastMax = Math.max(
                                                 ...exSets.map(
-                                                    (s) => s.weight || 0
-                                                )
+                                                    (s) => s.weight || 0,
+                                                ),
                                             )
+                                            // Historical stats for this exercise (similar to WorkoutForm)
+                                            const allExerciseWorkouts =
+                                                workouts.filter(
+                                                    (w) =>
+                                                        w.exercise_id ===
+                                                        exSets[0]?.exercise_id,
+                                                )
+
+                                            let last = null
+                                            let max = null
+                                            let delta = null
+
+                                            if (allExerciseWorkouts.length) {
+                                                const sorted = [
+                                                    ...allExerciseWorkouts,
+                                                ].sort(
+                                                    (a, b) =>
+                                                        new Date(b.created_at) -
+                                                        new Date(a.created_at),
+                                                )
+                                                last = sorted[0]
+
+                                                max =
+                                                    allExerciseWorkouts.reduce(
+                                                        (m, w) => {
+                                                            const load =
+                                                                (w.weight ||
+                                                                    0) *
+                                                                (w.reps || 0)
+                                                            const currentMax =
+                                                                (m.weight ||
+                                                                    0) *
+                                                                (m.reps || 0)
+                                                            return load >
+                                                                currentMax
+                                                                ? w
+                                                                : m
+                                                        },
+                                                        sorted[0],
+                                                    )
+
+                                                delta =
+                                                    sorted.length > 1
+                                                        ? (last.weight || 0) *
+                                                              (last.reps || 0) -
+                                                          (sorted[1].weight ||
+                                                              0) *
+                                                              (sorted[1].reps ||
+                                                                  0)
+                                                        : null
+                                            }
 
                                             // Historical data for graph (all workouts)
                                             const dailyMap = {}
@@ -302,11 +353,11 @@ export default function WorkoutSummary({ workouts }) {
                                                         w.exercises?.name ===
                                                             exName &&
                                                         w.exercises?.type ===
-                                                            sectionName
+                                                            sectionName,
                                                 )
                                                 .forEach((w) => {
                                                     const ymd = toYMD(
-                                                        w.created_at
+                                                        w.created_at,
                                                     )
                                                     const load =
                                                         (w.weight || 0) *
@@ -324,7 +375,7 @@ export default function WorkoutSummary({ workouts }) {
                                                     {
                                                         label: `${exName} Load Over Time`,
                                                         data: sortedDates.map(
-                                                            (d) => dailyMap[d]
+                                                            (d) => dailyMap[d],
                                                         ),
                                                         borderColor: '#1f78b4',
                                                         backgroundColor:
@@ -359,6 +410,33 @@ export default function WorkoutSummary({ workouts }) {
                                                             Last Max: {lastMax}{' '}
                                                             kg
                                                         </div>
+
+                                                        {/* New stats */}
+                                                        {last && (
+                                                            <div className="stats-block">
+                                                                Last:{' '}
+                                                                {last.reps} ×{' '}
+                                                                {last.weight} kg
+                                                            </div>
+                                                        )}
+                                                        {delta !== null && (
+                                                            <div
+                                                                className={`stats-block ${delta >= 0 ? 'positive' : 'negative'}`}
+                                                            >
+                                                                Δ vs Previous:{' '}
+                                                                {delta >= 0
+                                                                    ? '+'
+                                                                    : ''}
+                                                                {delta} kg
+                                                            </div>
+                                                        )}
+                                                        {max && (
+                                                            <div className="stats-block">
+                                                                Max: {max.reps}{' '}
+                                                                × {max.weight}{' '}
+                                                                kg
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div
                                                         className="exercise-chart"
@@ -371,7 +449,7 @@ export default function WorkoutSummary({ workouts }) {
                                                                 exerciseChartData
                                                             }
                                                             options={barOptions(
-                                                                `${exName} Load Over Time`
+                                                                `${exName} Load Over Time`,
                                                             )}
                                                         />
                                                     </div>
