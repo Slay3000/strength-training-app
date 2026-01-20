@@ -22,3 +22,18 @@
     font-size: 0.9rem;
     line-height: 1.4;
 }
+
+/* POSITIVE/NEGATIVE COLORS */
+.positive {
+    color: #2e8b57; /* green */
+    font-weight: bold;
+}
+
+.negative {
+    color: #d9534f; /* red */
+    font-weight: bold;
+}
+
+.neutral {
+    color: #555;
+}

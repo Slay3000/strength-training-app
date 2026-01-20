@@ -65,6 +65,9 @@ export default function WorkoutList({
     onEdit,
     prevStats, // kept as per Option B but unused
     hideDate = false,
+    toGoToday,
+    todayLoad,
+    prevWeekAvg,
 }) {
     const [collapsedDates, setCollapsedDates] = useState({})
     const [collapsedTypes, setCollapsedTypes] = useState({})
@@ -98,6 +101,34 @@ export default function WorkoutList({
 
     return (
         <div className="workout-list-container">
+            {hideDate && (
+                <div className="today-summary">
+                    <div className="stats-block">
+                        <strong>Today Load:</strong>{' '}
+                        {todayLoad.toLocaleString()} kg
+                    </div>
+
+                    <div className="stats-block">
+                        <strong>Last Week Avg:</strong>{' '}
+                        {prevWeekAvg.toLocaleString()} kg
+                    </div>
+
+                    <div
+                        className={`stats-block ${
+                            toGoToday < 0
+                                ? 'positive'
+                                : toGoToday > 0
+                                  ? 'negative'
+                                  : 'neutral'
+                        }`}
+                    >
+                        <strong>To Go Today:</strong>{' '}
+                        {toGoToday > 0
+                            ? `${toGoToday.toLocaleString()} kg`
+                            : `+${Math.abs(toGoToday).toLocaleString()} kg`}
+                    </div>
+                </div>
+            )}
             {Object.entries(grouped).map(([date, types]) => {
                 const showDate = !hideDate
                 return (
@@ -321,6 +352,7 @@ export default function WorkoutList({
                                                                                     {progress.toFixed(
                                                                                         1,
                                                                                     )}
+
                                                                                     %
                                                                                 </div>
                                                                                 <div

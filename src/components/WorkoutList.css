@@ -66,3 +66,13 @@
 .pr-toggle-button:hover {
     background: #dcdcdc;
 }
+
+.workout-tip {
+    background: #eef9ff;
+    border-left: 4px solid #1f78d1;
+    padding: 12px 14px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    font-size: 15px;
+    color: #0f3f75;
+}

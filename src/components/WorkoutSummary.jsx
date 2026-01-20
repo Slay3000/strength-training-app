@@ -228,9 +228,9 @@ export default function WorkoutSummary({ workouts }) {
                                 {sectionName}{' '}
                                 <span
                                     className={
-                                        sectionStats.toGoVsLastWeek > 0
+                                        sectionStats.toGoVsLastWeek < 0
                                             ? 'positive'
-                                            : sectionStats.toGoVsLastWeek < 0
+                                            : sectionStats.toGoVsLastWeek > 0
                                               ? 'negative'
                                               : 'neutral'
                                     }

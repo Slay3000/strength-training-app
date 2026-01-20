@@ -11,6 +11,14 @@ import {
 } from './helpers/workout'
 import './App.css'
 
+const MUSCLE_TARGETS = {
+    Legs: 2.0, // 200%
+    Back: 1.0, // 100%
+    Chest: 1.0, // 100%
+    Arms: 0.5, // 50%
+    Shoulders: 0.5, // 50%
+}
+
 export default function App() {
     const [workouts, setWorkouts] = useState([])
     const [exerciseId, setExerciseId] = useState('')
@@ -28,6 +36,8 @@ export default function App() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
+    const [showWorkoutTip, setShowWorkoutTip] = useState(true)
+    const [showThisWeekTip, setShowThisWeekTip] = useState(true)
 
     const today = new Date()
     const dayOfWeek = today.getDay() // 0 = Sunday, 1 = Monday ...
@@ -191,11 +201,103 @@ export default function App() {
     const todayWorkouts = workouts.filter(
         (w) => w.created_at.slice(0, 10) === todayStr,
     )
+    const todayLoad = todayWorkouts.reduce(
+        (sum, w) => sum + (w.weight || 0) * (w.reps || 0),
+        0,
+    )
 
     // Call it
     const prevStats = computePrevStatsBySectionAndExercise(workouts, todayStr)
     const weeklyAverages = computeWeeklySectionAverages(workouts)
+    const currentWeekLoads = weeklyAverages?.sections || {}
+    const prevWeekAvg = weeklyAverages?.overall?.previousWeekAvg || 0
+    const toGoToday = prevWeekAvg - todayLoad
+    const toGoTodaySigned = toGoToday > 0 ? toGoToday : 0
+    const lastWeekLoads = weeklyAverages?.sections || {}
+    const totalLastWeek = Object.values(lastWeekLoads).reduce(
+        (sum, sec) => sum + (sec.previousWeekAvg || 0),
+        0,
+    )
+    const targetSum = Object.values(MUSCLE_TARGETS).reduce((a, b) => a + b, 0)
 
+    const targetProportions = Object.fromEntries(
+        Object.entries(MUSCLE_TARGETS).map(([muscle, weight]) => [
+            muscle,
+            weight / targetSum,
+        ]),
+    )
+    const actualProportions = Object.fromEntries(
+        Object.entries(lastWeekLoads).map(([muscle, sec]) => {
+            const load = sec.previousWeekAvg || 0
+            return [muscle, totalLastWeek > 0 ? load / totalLastWeek : 0]
+        }),
+    )
+    const imbalance = Object.entries(targetProportions).map(
+        ([muscle, targetPercent]) => {
+            const actualPercent = actualProportions[muscle] || 0
+            const diffPercent = actualPercent - targetPercent
+            return {
+                muscle,
+                diffPercent, // negative means undertrained
+                actualPercent,
+                targetPercent,
+            }
+        },
+    )
+    const undertrained = imbalance
+        .filter((x) => x.diffPercent < -0.05) // 5% tolerance
+        .sort((a, b) => a.diffPercent - b.diffPercent)
+
+    let workoutTip = ''
+
+    if (undertrained.length > 0) {
+        const names = undertrained.map((m) => m.muscle).join(', ')
+        workoutTip = `Tip: Last week lacked focus on ${names}. Prioritize these muscles today.`
+    } else {
+        workoutTip = 'Tip: Great balance last week! Keep it up 🔥'
+    }
+
+    const imbalanceCurrentWeek = Object.entries(MUSCLE_TARGETS).map(
+        ([muscle, targetRatio]) => {
+            const thisWeek = currentWeekLoads[muscle]?.currentWeekAvg || 0
+            const normalized = thisWeek / targetRatio
+            return { muscle, normalized, raw: thisWeek }
+        },
+    )
+    const totalThisWeek = Object.values(currentWeekLoads).reduce(
+        (sum, sec) => sum + (sec.currentWeekAvg || 0),
+        0,
+    )
+
+    const actualProportionsThisWeek = Object.fromEntries(
+        Object.entries(currentWeekLoads).map(([muscle, sec]) => {
+            const load = sec.currentWeekAvg || 0
+            return [muscle, totalThisWeek > 0 ? load / totalThisWeek : 0]
+        }),
+    )
+    const imbalanceThisWeek = Object.entries(targetProportions).map(
+        ([muscle, targetPercent]) => {
+            const actualPercent = actualProportionsThisWeek[muscle] || 0
+            const diffPercent = actualPercent - targetPercent
+            return {
+                muscle,
+                diffPercent, // negative → undertrained
+                actualPercent,
+                targetPercent,
+            }
+        },
+    )
+    const undertrainedThisWeek = imbalanceThisWeek
+        .filter((x) => x.diffPercent < -0.05) // 5% tolerance
+        .sort((a, b) => a.diffPercent - b.diffPercent)
+    let thisWeekTip = ''
+    if (undertrainedThisWeek.length > 0) {
+        const names = undertrainedThisWeek.map((t) => t.muscle).join(', ')
+        thisWeekTip = `This Week Tip: You undertrained ${names} so far. Focus on them today.`
+    } else {
+        thisWeekTip =
+            'This Week Tip: This week is well balanced so far. Great job 🔥'
+    }
     return (
         <div className="app-container">
             {/* Tabs */}
@@ -235,6 +337,28 @@ export default function App() {
             <div className="tab-content">
                 {tab === 'current' && (
                     <>
+                        {workoutTip && showWorkoutTip && (
+                            <div className="workout-tip closable">
+                                <span>{workoutTip}</span>
+                                <button
+                                    className="tip-close-button"
+                                    onClick={() => setShowWorkoutTip(false)}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        )}
+                        {thisWeekTip && showThisWeekTip && (
+                            <div className="workout-tip secondary-tip closable">
+                                <span>{thisWeekTip}</span>
+                                <button
+                                    className="tip-close-button"
+                                    onClick={() => setShowThisWeekTip(false)}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        )}
                         <WorkoutForm
                             workouts={workouts}
                             onAdd={handleAddEntries}
@@ -248,6 +372,9 @@ export default function App() {
                             hideDate={true}
                             prevStats={prevStats} // contains sections, exercises, overall totals (from models)
                             weekStart={weekStartDate} // optional: for display
+                            toGoToday={toGoToday}
+                            todayLoad={todayLoad}
+                            prevWeekAvg={prevWeekAvg}
                         />
                     </>
                 )}
