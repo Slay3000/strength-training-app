@@ -3,16 +3,18 @@ import { supabase } from '../lib/supabaseClient'
 import './WorkoutForm.css'
 
 export default function WorkoutForm({
-    workouts, // all historical workouts
-    onAdd, // function to submit array of exercises
+    workouts,
+    onAdd,
     hiddenExercises = [],
+
+    entries,
+    setEntries,
+    searchTerms,
+    setSearchTerms,
+    dropdownOpen,
+    setDropdownOpen,
 }) {
-    const [entries, setEntries] = useState([
-        { exerciseId: '', reps: '', weight: '' },
-    ])
     const [exercises, setExercises] = useState([])
-    const [searchTerms, setSearchTerms] = useState([''])
-    const [dropdownOpen, setDropdownOpen] = useState([false])
     const containerRef = useRef(null)
 
     // Fetch exercises once
@@ -268,7 +270,7 @@ export default function WorkoutForm({
 
             {/* Submit button at bottom */}
             <button className="submit-button" onClick={handleSubmit}>
-                {entries.length === 1 ? 'Add' : 'Add Exercises'}
+                {entries.length === 1 ? 'Add' : 'Add Set'}
             </button>
         </div>
     )
