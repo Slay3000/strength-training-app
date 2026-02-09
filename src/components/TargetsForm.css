@@ -1,86 +1,159 @@
+/* Root container */
+.targets-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    color: var(--text);
+}
+
+/* Title */
+.targets-form h2 {
+    margin: 0 0 6px 0;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text);
+}
+
+/* Header row */
 .targets-header-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
+    display: grid;
+    grid-template-columns: 1fr 110px 110px 100px;
     font-weight: 600;
-    color: #555;
-    border-bottom: 2px solid #ddd;
-    margin-bottom: 6px;
+    color: var(--text-light);
+    padding: 6px 4px;
+    margin-bottom: 4px;
 }
 
-.header-col {
-    flex: 1;
-    text-align: left;
-}
-
-.header-col.target {
-    max-width: 120px;
-    text-align: center;
-}
-.header-col.current {
-    max-width: 120px;
-    text-align: center;
-}
-
+/* Each muscle row styled like cards */
 .targets-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 110px 110px 100px;
+    background: var(--bg-card);
+    padding: 16px 14px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-card);
     align-items: center;
-    padding: 10px 0;
-    gap: 14px;
-    border-bottom: 1px solid #e5e5e5;
+    gap: 10px;
+    border: 1px solid var(--border);
 }
 
-.targets-row .muscle {
-    flex: 1;
+/* Muscle name column */
+.muscle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
 }
 
+/* Target input (compact but readable) */
 .target-input {
-    width: 90px;
-    padding: 6px 8px;
+    width: 85px !important;
+    max-width: 85px !important;
+    padding: 8px 10px;
+    font-size: 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text);
     text-align: center;
+    transition:
+        border 0.12s ease,
+        box-shadow 0.12s ease;
 }
 
+.target-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Current ratio */
 .current-ratio {
-    width: 90px;
     text-align: center;
     font-size: 15px;
-    color: #444;
+    color: var(--text-light);
 }
 
-.save-targets-btn {
-    margin-top: 16px;
-    padding: 10px 14px;
-    font-size: 16px;
-    border: none;
-    border-radius: 6px;
-
-    background-color: #4a7bd9; /* matches WorkoutForm Add btn */
-    color: white;
-
-    cursor: pointer;
-    transition:
-        background-color 0.2s ease,
-        transform 0.1s ease;
-}
-
-.save-targets-btn:hover {
-    background-color: #3b67bc;
-}
-
-.save-targets-btn:active {
-    transform: scale(0.97);
-}
-
-.header-col.needed,
+/* Needed ratio percentage */
 .needed-ratio {
-    width: 100px;
     text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .needed-ratio.over {
-    color: #c62828; /* red */
+    color: var(--danger); /* red */
 }
 
 .needed-ratio.under {
-    color: #2e7d32; /* green */
+    color: var(--success); /* green */
+}
+
+/* Save button styled like WorkoutForm Add buttons */
+.save-targets-btn {
+    margin-top: 10px;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+
+    background: linear-gradient(135deg, #0077ff, #0099ff);
+    color: white;
+    box-shadow: 0 2px 6px rgba(0, 118, 255, 0.25);
+    transition: all 0.18s ease-in-out;
+}
+
+.save-targets-btn:hover {
+    background: linear-gradient(135deg, #0066dd, #0088dd);
+    transform: translateY(-1px);
+}
+
+.save-targets-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 118, 255, 0.3);
+}
+
+/* ----------------------------------
+   Mobile responsive layout
+----------------------------------*/
+@media (max-width: 480px) {
+    .targets-header-row {
+        display: none;
+    }
+
+    .targets-row {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 18px;
+    }
+
+    .target-input {
+        width: 90% !important;
+        max-width: none !important;
+        font-size: 16px;
+    }
+
+    .current-ratio,
+    .needed-ratio {
+        text-align: left;
+        font-size: 16px;
+    }
+
+    .current-ratio::before {
+        content: 'Current: ';
+        font-weight: 600;
+    }
+
+    .needed-ratio::before {
+        content: 'Needed: ';
+        font-weight: 600;
+    }
+
+    .save-targets-btn {
+        width: 100%;
+    }
 }

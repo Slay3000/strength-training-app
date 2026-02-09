@@ -1,78 +1,125 @@
+/* ----------------------------------------------
+   PR BOX — NOW THEME AWARE AND MATCHING UI
+----------------------------------------------*/
 .pr-box {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin: 12px 6px;
-    border-radius: 6px;
-    background: #f7f7f7;
+
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    padding: 14px;
+    margin: 16px 6px;
+
+    box-shadow: var(--shadow-card);
+    color: var(--text);
 }
 
+/* PR stat items */
 .pr-box .stats-block {
-    flex: 0 1 auto; /* shrink or grow as needed */
-    white-space: nowrap; /* keep label+value together */
+    flex: 0 1 auto;
+    white-space: nowrap;
     padding: 4px 8px;
+    font-size: 15px;
+    color: var(--text);
 }
 
 /* PROGRESS COLORS */
 .progress-excellent {
-    color: #2e8b57; /* green */
-    font-weight: bold;
+    color: var(--success);
+    font-weight: 700;
 }
 
 .progress-good {
-    color: #d4a017; /* yellow/gold */
-    font-weight: bold;
+    color: #d4a017; /* gold */
+    font-weight: 700;
 }
 
 .progress-new-pr {
-    color: #1f78d1; /* blue */
-    font-weight: bold;
+    color: #3b82f6; /* theme blue */
+    font-weight: 700;
 }
 
 /* REMAINING COLORS */
 .remaining-hit-pr {
-    color: #2e8b57; /* green */
-    font-weight: bold;
+    color: var(--success);
+    font-weight: 700;
 }
 
 .remaining-close {
-    color: #d4a017; /* yellow/gold */
-    font-weight: bold;
+    color: #d4a017;
+    font-weight: 700;
 }
 
+/* Mobile layout */
 @media (max-width: 760px) {
-    /* Make PR stats full-width on mobile */
     .pr-box .stats-block {
         flex: 1 1 100%;
         width: 100%;
-        display: block;
         padding: 12px 6px;
         font-size: 16px;
     }
 }
 
+/* Toggle button for PR section */
 .pr-toggle-button {
-    background: #e9e9e9;
-    border: 1px solid #ccc;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 6px 10px;
     font-size: 14px;
     cursor: pointer;
     margin: 8px 0;
+    color: var(--text);
 }
 
 .pr-toggle-button:hover {
-    background: #dcdcdc;
+    background: var(--border);
 }
 
+/* Tip styling stays theme-aware */
 .workout-tip {
-    background: #eef9ff;
+    background: var(--bg-soft);
     border-left: 4px solid #1f78d1;
     padding: 12px 14px;
     margin-bottom: 15px;
     border-radius: 6px;
     font-size: 15px;
-    color: #0f3f75;
+    color: var(--text);
+}
+
+/* ----------------------------------------------
+   PR COLORS — THEME SAFE
+----------------------------------------------*/
+
+/* New PR today — blue highlight */
+.progress-new-pr {
+    color: #3b82f6 !important; /* strong blue */
+    font-weight: 700;
+}
+
+/* Excellent progress: 90%+ of PR */
+.progress-excellent {
+    color: var(--success, #16a34a) !important; /* bold green */
+    font-weight: 700;
+}
+
+/* Good progress: 70–89% of PR */
+.progress-good {
+    color: #d4a017 !important; /* golden yellow */
+    font-weight: 700;
+}
+
+/* Already exceeded PR */
+.remaining-hit-pr {
+    color: var(--success, #16a34a) !important;
+    font-weight: 700;
+}
+
+/* Close to PR, less than 20% away */
+.remaining-close {
+    color: #d4a017 !important;
+    font-weight: 700;
 }

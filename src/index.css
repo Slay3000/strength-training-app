@@ -1,6 +1,40 @@
-/* index.css — basic global styles */
+/* index.css — global theme system */
+
+:root {
+    --bg: #f7f7f7;
+    --bg-card: #ffffff;
+    --text: #1f2937;
+    --text-light: #4b5563;
+    --border: #e5e7eb;
+
+    --primary: #4a7bd9;
+    --primary-hover: #3b67bc;
+
+    --danger: #dc2626;
+    --success: #16a34a;
+
+    --type-color: var(--text-light);
+    --exercise-color: var(--text);
+}
+
+/* DARK THEME */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0f0f10;
+        --bg-card: #1a1b1e;
+        --text: #e5e7eb;
+        --text-light: #9ca3af;
+        --border: #2d2f33;
+
+        --primary: #4082ff;
+        --primary-hover: #3069dd;
+        --type-color: #9ca3af;
+    }
+}
+
 body {
     margin: 0;
     font-family: system-ui, sans-serif;
-    background-color: #f33333;
+    background-color: var(--bg);
+    color: var(--text);
 }

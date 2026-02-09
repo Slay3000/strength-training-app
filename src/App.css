@@ -1,16 +1,58 @@
-/* --- GLOBAL LAYOUT --- */
+/* ----------------------------------------------
+   GLOBAL THEME (Light + Dark)
+------------------------------------------------*/
+:root {
+    --bg: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-soft: #f1f5f9;
+
+    --text: #1e293b;
+    --text-light: #475569;
+
+    --border: #e2e8f0;
+
+    --primary: #2563eb;
+    --primary-hover: #1e4ecb;
+
+    --danger: #dc2626;
+    --success: #16a34a;
+
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Dark theme */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #111214;
+        --bg-card: #1a1c1f;
+        --bg-input: #2a2c32; /* NEW — dedicated input background */
+        --bg-soft: #16181b;
+
+        --text: #f1f5f9;
+        --text-light: #cbd5e1;
+
+        --border: #3b3f45;
+
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+
+        --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.55);
+    }
+}
+/* ----------------------------------------------
+   BASE LAYOUT
+------------------------------------------------*/
 body {
+    margin: 0;
     font-family:
         'Inter',
         system-ui,
         -apple-system,
         sans-serif;
-    margin: 0;
-    background-color: #f8fafc;
-    color: #333;
+    background: var(--bg);
+    color: var(--text);
 }
 
-/* Main container */
 .app-container {
     display: flex;
     flex-direction: column;
@@ -19,7 +61,9 @@ body {
     padding: 1rem;
 }
 
-/* --- TABS --- */
+/* ----------------------------------------------
+   TABS
+------------------------------------------------*/
 .tabs {
     display: flex;
     flex-wrap: wrap;
@@ -29,38 +73,42 @@ body {
 }
 
 .tabs button {
-    background-color: #e2e8f0;
-    border: none;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 0.6rem 1.2rem;
     font-size: 1rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text);
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.15s ease;
 }
 
 .tabs button:hover {
-    background-color: #cbd5e1;
+    background: var(--border);
 }
 
 .tabs button.active {
-    background-color: #2563eb;
+    background: var(--primary);
     color: white;
+    border-color: var(--primary);
 }
 
-/* --- TAB CONTENT --- */
+/* ----------------------------------------------
+   TAB CONTENT WRAPPER
+------------------------------------------------*/
 .tab-content {
     width: 100%;
     max-width: 900px;
-    background-color: white;
+    background: var(--bg-card);
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-card);
     padding: 1.5rem;
 }
 
-/* --- FORMS --- */
-/* === Workout Form === */
+/* ----------------------------------------------
+   WORKOUT FORM
+------------------------------------------------*/
 .workout-form {
     display: flex;
     gap: 10px;
@@ -74,34 +122,23 @@ body {
 .weight-input {
     padding: 10px;
     border-radius: 6px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
     font-size: 15px;
-    background-color: #fff;
-    transition: border-color 0.2s;
+    transition: border-color 0.15s ease;
 }
 
 .exercise-select:focus,
 .reps-input:focus,
 .weight-input:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: var(--primary);
 }
 
 .exercise-select {
     flex: 1;
     min-width: 180px;
-}
-
-.red-positive {
-    color: red;
-}
-
-.green-negative {
-    color: green;
-}
-
-.neutral {
-    color: black;
 }
 
 .reps-input,
@@ -111,26 +148,24 @@ body {
 }
 
 .add-button {
-    background-color: #007bff;
+    background: var(--primary);
     color: white;
     border: none;
     padding: 10px 16px;
     border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.2s;
-    font-weight: 500;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
 }
 
 .add-button:hover {
-    background-color: #0056b3;
+    background: var(--primary-hover);
 }
 
-/* === Responsive Mobile Styling === */
+/* Mobile workout form */
 @media (max-width: 768px) {
     .workout-form {
         flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
         width: 100%;
     }
 
@@ -142,30 +177,11 @@ body {
         font-size: 16px;
         padding: 12px;
     }
-
-    .add-button {
-        background-color: #0066cc;
-        border-radius: 8px;
-    }
-
-    .add-button:hover {
-        background-color: #004a99;
-    }
 }
 
-/* Optional: Improve tap targets on very small screens */
-@media (max-width: 480px) {
-    .workout-form {
-        gap: 14px;
-    }
-
-    .add-button {
-        font-size: 17px;
-        padding: 14px;
-    }
-}
-
-/* --- WORKOUT LIST --- */
+/* ----------------------------------------------
+   WORKOUT LIST
+------------------------------------------------*/
 .workout-list-container {
     display: flex;
     flex-direction: column;
@@ -173,7 +189,7 @@ body {
 }
 
 .workout-date-card {
-    background-color: #f1f5f9;
+    background: var(--bg-soft);
     border-radius: 8px;
     padding: 1rem;
 }
@@ -184,31 +200,23 @@ body {
     margin-bottom: 0.5rem;
 }
 
-.type-card {
-    margin-left: 1rem;
-}
-
-.exercise-card {
-    margin-left: 1rem;
-    margin-top: 0.5rem;
-}
-
 .workout-item-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #fff;
+    background: var(--bg-card);
     border-radius: 6px;
     padding: 0.5rem 0.8rem;
     margin-top: 0.3rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .delete-button,
 .edit-button {
     background: none;
-    color: #dc2626;
     border: none;
+    color: var(--danger);
     font-weight: 600;
     cursor: pointer;
 }
@@ -218,550 +226,197 @@ body {
     text-decoration: underline;
 }
 
-/* --- SUMMARY --- */
+/* ----------------------------------------------
+   SUMMARY
+------------------------------------------------*/
 .summary-section {
     width: 100%;
     max-width: 800px;
-    background: #f9fafb;
+    background: var(--bg-soft);
     padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-card);
     margin: 0 auto;
 }
 
 .summary-section h2 {
     text-align: center;
     margin-bottom: 16px;
-    color: #222;
+    color: var(--text);
 }
 
 .summary-table {
     width: 100%;
     border-collapse: collapse;
-    text-align: center;
 }
 
 .summary-table th,
 .summary-table td {
     padding: 10px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border);
 }
 
 .summary-table th {
-    background-color: #eceff1;
+    background: var(--bg-soft);
     font-weight: bold;
-}
-
-.type-col {
-    text-align: left;
-    font-weight: bold;
-    color: #333;
 }
 
 .pos {
-    color: #1e8e3e;
+    color: var(--success);
     font-weight: 600;
 }
 
 .neg {
-    color: #c62828;
+    color: var(--danger);
     font-weight: 600;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-    .summary-section {
-        padding: 12px;
-    }
-
-    .summary-table th,
-    .summary-table td {
-        padding: 6px;
-        font-size: 14px;
-    }
-
-    .summary-table th:nth-child(n + 4),
-    .summary-table td:nth-child(n + 4) {
-        display: none; /* hide some columns on small screens */
-    }
-}
-
-.summary-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.summary-table th,
-.summary-table td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #e2e8f0;
-    text-align: left;
-}
-
-.summary-table th {
-    background-color: #f8fafc;
-}
-
-.summary-table td:last-child {
-    font-weight: bold;
-}
-
-/* --- PREFERENCES --- */
+/* ----------------------------------------------
+   PREFERENCES
+------------------------------------------------*/
 .preferences-container {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.select-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
 .select-group select {
     width: 100%;
     padding: 0.6rem;
     border-radius: 8px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
 }
 
-/* --- RESPONSIVE DESIGN --- */
-@media (max-width: 600px) {
-    .tab-content {
-        padding: 1rem;
-    }
-
-    .tabs button {
-        flex: 1 1 45%;
-        font-size: 0.9rem;
-    }
-
-    .workout-form {
-        flex-direction: column;
-    }
-
-    .workout-form button {
-        width: 100%;
-    }
-
-    .workout-item-card {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .workout-item-card button {
-        align-self: flex-end;
-        margin-top: 0.3rem;
-    }
-}
-
-/* ---------- Workout Summary container & table ---------- */
-.workout-summary {
-    width: 100%;
-    max-width: 520px;
-    background-color: #fff;
-    padding: 14px;
-    border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
-    margin: 0 auto;
-}
-
-.workout-summary h2 {
-    margin: 0 0 10px 0;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #111827;
-}
-
-.summary-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.95rem;
-}
-
-.summary-table th,
-.summary-table td {
-    padding: 10px 12px;
-    text-align: left;
-}
-
-/* color stripe per type (background + contrasting text) */
-.type-row.chest {
-    background-color: #fff1f2; /* pale red */
-    color: #7f1d1d;
-}
-.type-row.back {
-    background-color: #eff6ff; /* pale blue */
-    color: #0f172a;
-}
-.type-row.legs {
-    background-color: #f0fdf4; /* pale green */
-    color: #064e3b;
-}
-.type-row.shoulders {
-    background-color: #fffbeb; /* pale yellow */
-    color: #92400e;
-}
-.type-row.arms {
-    background-color: #f5f3ff; /* pale purple */
-    color: #4c1d95;
-}
-.type-row.core,
-.type-row.unknown {
-    background-color: #f3f4f6;
-    color: #111827;
-}
-
-/* last column weight-to-go styling */
-.weight-to-go.positive {
-    color: #056e3a;
-    font-weight: 700;
-}
-.weight-to-go.negative {
-    color: #991b1b;
-    font-weight: 700;
-}
-
-/* ---------- Preferences: per-type select dropdowns ---------- */
-.preferences-container {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    width: 100%;
-    max-width: 640px;
-    margin: 0 auto;
-}
-
-.exercise-type-dropdown {
-    position: relative;
-    width: 100%;
-}
-
-.dropdown-toggle {
-    width: 100%;
-    background: linear-gradient(180deg, #fbfdff, #f6f8ff);
-    padding: 12px 14px;
-    border-radius: 10px;
-    border: 1px solid #e6edf3;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    cursor: pointer;
-    font-weight: 600;
-    color: #0f172a;
-    box-shadow: 0 2px 6px rgba(16, 24, 40, 0.03);
-}
-
-.dropdown-toggle:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
-}
-
-.dropdown-toggle .caret {
-    font-size: 12px;
-    opacity: 0.8;
-}
-
-/* dropdown menu */
-.dropdown-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    width: 100%;
-    max-height: 320px;
-    overflow-y: auto;
-    background: #fff;
-    border: 1px solid #e6edf3;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
-    padding: 10px;
-    z-index: 60;
-}
-
-/* items */
-.dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.12s ease;
-    font-size: 0.95rem;
-}
-
-.dropdown-item:hover {
-    background-color: #f1f5f9;
-}
-
-.dropdown-item input[type='checkbox'] {
-    width: 18px;
-    height: 18px;
-}
-
-/* ensure long names wrap nicely */
-.dropdown-item .name {
-    flex: 1;
-    white-space: normal;
-    word-break: break-word;
-}
-
-/* ---------- AddExercise form (looks like card) ---------- */
-.add-exercise-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-width: 520px;
-    margin: 0 auto;
-    padding: 14px;
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(2, 6, 23, 0.04);
-}
-
-.add-exercise-form input,
-.add-exercise-form select {
-    padding: 10px 12px;
-    border: 1px solid #e6edf3;
-    border-radius: 8px;
-    font-size: 1rem;
-}
-
-.add-exercise-form button {
-    align-self: flex-start;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: none;
-    background-color: #10b981; /* green */
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.add-exercise-form button:hover {
-    background-color: #059669;
-}
-
-.add-exercise-form .error-message {
-    color: #b91c1c;
-    font-weight: 600;
-}
-
-/* ---------- Misc ---------- */
-.no-workouts {
-    text-align: center;
-    color: #6b7280;
-    padding: 18px;
-    border-radius: 10px;
-    background-color: #fbfbfb;
-    border: 1px dashed #e5e7eb;
-}
-
-/* make sure these play nicely on small screens */
-@media (max-width: 520px) {
-    .preferences-container {
-        max-width: 100%;
-        padding: 0 8px;
-    }
-    .workout-summary {
-        max-width: 100%;
-        padding: 12px;
-    }
-    .add-exercise-form {
-        padding: 12px;
-        max-width: 100%;
-    }
-    .dropdown-menu {
-        max-height: 220px;
-    }
-}
-
-/* General container */
-.stats-section {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 16px;
-    background: #fafafa;
-}
-
-/* Section header */
-.stats-section .section-header {
-    font-weight: bold;
-    font-size: 1.1rem;
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-}
-
-/* Stats row */
-.stats-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 6px;
-}
-
-/* Individual stat block */
-.stats-block {
-    background: #fff;
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    min-width: 140px;
-    font-size: 0.9rem;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Load-to-go colors */
-.red-positive {
-    color: red;
-}
-
-.green-negative {
-    color: green;
-}
-
-.neutral {
-    color: black;
-}
-
-/* Exercise cards */
-.exercise-card {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 12px;
-    background: #fff;
-}
-
-/* Exercise header */
-.exercise-card .exercise-header {
-    font-weight: bold;
-    margin-bottom: 6px;
-}
-
-/* Hide load stats on history */
-.history .stats-section .load-stats {
-    display: none;
-}
-
-/* Responsive mobile */
-@media (max-width: 600px) {
-    .stats-row {
-        flex-direction: column;
-    }
-    .stats-block {
-        min-width: auto;
-    }
-}
-
-/* ---------- Section / Type Stats ---------- */
-.type-stats {
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 16px;
-    background-color: #f1f5f9;
-}
-
-.type-stats .type-header {
-    font-size: 1.1rem;
-    font-weight: bold;
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.type-stats .section-load {
-    font-size: 0.9rem;
-    color: #334155;
-}
-
-/* ---------- Exercise Stats ---------- */
-.exercise-stats {
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 10px;
-    margin-bottom: 12px;
-    background-color: #ffffff;
-}
-
-.exercise-stats .exercise-header {
-    font-weight: bold;
-    margin-bottom: 6px;
-    font-size: 0.95rem;
-}
-
-.stats-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.stats-block {
-    background-color: #f8fafc;
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-    min-width: 120px;
-    font-size: 0.9rem;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Load-to-go colors */
-.red-positive {
-    color: red;
-}
-
-.green-negative {
-    color: green;
-}
-
-.neutral {
-    color: black;
-}
-
-/* Hide load stats on history */
-.history .load-stats {
-    display: none;
-}
-
-/* ---------- Mobile Responsive ---------- */
-@media (max-width: 600px) {
-    .stats-row {
-        flex-direction: column;
-    }
-
-    .stats-block {
-        min-width: auto;
-    }
-}
-
+/* ----------------------------------------------
+   TIPS
+------------------------------------------------*/
 .closable {
     position: relative;
-    padding-right: 32px; /* space for close button */
+    padding-right: 32px;
 }
 
 .tip-close-button {
     position: absolute;
     right: 10px;
     top: 8px;
-    background: transparent;
+    background: none;
     border: none;
     font-size: 20px;
     cursor: pointer;
-    color: #444;
-    padding: 0;
-    line-height: 1;
-    transition: color 0.2s ease-in-out;
+    color: var(--text-light);
 }
 
 .tip-close-button:hover {
-    color: #000;
+    color: var(--text);
+}
+
+/* Tip cards */
+.workout-tip {
+    background: var(--bg-soft);
+    border-left: 4px solid var(--primary);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+
+.secondary-tip {
+    border-left-color: var(--success);
+}
+
+/* ----------------------------------------------
+   TARGETS TAB (Cards layout)
+------------------------------------------------*/
+.targets-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.targets-header-row {
+    display: grid;
+    grid-template-columns: 1fr 110px 110px 100px;
+    font-weight: 600;
+    color: var(--text-light);
+    padding: 6px 4px;
+}
+
+.targets-row {
+    display: grid;
+    grid-template-columns: 1fr 110px 110px 100px;
+    background: var(--bg-card);
+    padding: 14px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    align-items: center;
+    gap: 8px;
+}
+
+.current-ratio {
+    text-align: center;
+    color: var(--text-light);
+}
+
+.needed-ratio {
+    font-weight: 600;
+    text-align: center;
+}
+
+.needed-ratio.over {
+    color: var(--danger);
+}
+
+.needed-ratio.under {
+    color: var(--success);
+}
+
+.save-targets-btn {
+    margin-top: 6px;
+    padding: 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.save-targets-btn:hover {
+    background: var(--primary-hover);
+}
+
+/* Mobile Targets */
+@media (max-width: 480px) {
+    .targets-header-row {
+        display: none;
+    }
+
+    .targets-row {
+        grid-template-columns: 1fr;
+    }
+
+    .current-ratio::before {
+        content: 'Current: ';
+        font-weight: 600;
+    }
+
+    .needed-ratio::before {
+        content: 'Needed: ';
+        font-weight: 600;
+    }
+}
+
+/* ----------------------------------------------
+   MISC
+------------------------------------------------*/
+.no-workouts {
+    text-align: center;
+    color: var(--text-light);
+    padding: 16px;
+    background: var(--bg-soft);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
 }

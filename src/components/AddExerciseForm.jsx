@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import './AddExerciseForm.css'
 
 export default function AddExerciseForm() {
     const [name, setName] = useState('')
@@ -54,7 +55,7 @@ export default function AddExerciseForm() {
                 setErrorMessage(`Exercise "${normalizedName}" already exists.`)
             } else {
                 setErrorMessage(
-                    'Failed to add exercise. See console for details.'
+                    'Failed to add exercise. See console for details.',
                 )
                 console.error(error)
             }

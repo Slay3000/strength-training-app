@@ -162,18 +162,22 @@ export default function WorkoutForm({
 
                 // Filter dropdown based on typed text
                 const filteredDropdown = Object.keys(groupedExercises).length
-                    ? Object.entries(groupedExercises).map(([type, list]) => ({
-                          type,
-                          list: list.filter((ex) =>
-                              searchTerms[index]
-                                  ? ex.name
-                                        .toLowerCase()
-                                        .includes(
-                                            searchTerms[index].toLowerCase(),
-                                        )
-                                  : true,
-                          ),
-                      }))
+                    ? Object.entries(groupedExercises)
+                          .map(([type, list]) => ({
+                              type,
+                              list: list.filter((ex) =>
+                                  searchTerms[index]
+                                      ? ex.name
+                                            .toLowerCase()
+                                            .includes(
+                                                searchTerms[
+                                                    index
+                                                ].toLowerCase(),
+                                            )
+                                      : true,
+                              ),
+                          }))
+                          .filter((group) => group.list.length > 0) // <-- HIDE EMPTY GROUPS
                     : []
 
                 return (
