@@ -189,6 +189,18 @@ export default function App() {
                     ),
                 )
             }
+
+            // Keep exercise + weight, clear reps, remove edit mode
+            setFormEntries([
+                {
+                    exerciseId: editing.exerciseId,
+                    weight: editing.weight,
+                    reps: '',
+                },
+            ])
+            setFormSearchTerms([editing.exerciseName]) // if you store name
+            setFormDropdownOpen([false])
+
             return
         }
 
@@ -321,9 +333,7 @@ export default function App() {
                     </>
                 )}
 
-                {tab === 'history' && (
-                    <WorkoutList workouts={workouts} onDelete={handleDelete} />
-                )}
+                {tab === 'history' && <WorkoutList workouts={workouts} />}
 
                 {tab === 'summary' && <WorkoutSummary workouts={workouts} />}
 

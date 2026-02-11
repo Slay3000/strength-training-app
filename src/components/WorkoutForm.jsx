@@ -182,92 +182,100 @@ export default function WorkoutForm({
 
                 return (
                     <div key={index} className="exercise-row">
-                        {/* Exercise selector */}
-                        <div className="exercise-select-container">
-                            <input
-                                type="text"
-                                className="exercise-input"
-                                placeholder="Select exercise..."
-                                value={searchTerms[index]}
-                                onChange={(e) => {
-                                    const terms = [...searchTerms]
-                                    terms[index] = e.target.value
-                                    setSearchTerms(terms)
-                                    toggleDropdown(index, true)
-                                }}
-                                onFocus={() => toggleDropdown(index, true)}
-                            />
-                            {dropdownOpen[index] && (
-                                <div className="dropdown-list">
-                                    {filteredDropdown.length === 0 ? (
-                                        <div className="dropdown-empty">
-                                            No exercises found
-                                        </div>
-                                    ) : (
-                                        filteredDropdown.map((group) => (
-                                            <div
-                                                key={group.type}
-                                                className="dropdown-group"
-                                            >
-                                                <div className="dropdown-type">
-                                                    {group.type}
-                                                </div>
-                                                {group.list.map((ex) => (
-                                                    <div
-                                                        key={ex.id}
-                                                        className={`dropdown-item${
-                                                            row.exerciseId ===
-                                                            ex.id
-                                                                ? ' selected'
-                                                                : ''
-                                                        }`}
-                                                        onClick={() =>
-                                                            handleSelectExercise(
-                                                                index,
-                                                                ex,
-                                                            )
-                                                        }
-                                                    >
-                                                        {ex.name}
-                                                    </div>
-                                                ))}
+                        {/* FIRST ROW: EXERCISE SELECTOR (FULL WIDTH) */}
+                        <div className="exercise-select-wrapper">
+                            <div className="exercise-select-container">
+                                <input
+                                    type="text"
+                                    className="exercise-input"
+                                    placeholder="Select exercise..."
+                                    value={searchTerms[index]}
+                                    onChange={(e) => {
+                                        const terms = [...searchTerms]
+                                        terms[index] = e.target.value
+                                        setSearchTerms(terms)
+                                        toggleDropdown(index, true)
+                                    }}
+                                    onFocus={() => toggleDropdown(index, true)}
+                                />
+
+                                {dropdownOpen[index] && (
+                                    <div className="dropdown-list">
+                                        {filteredDropdown.length === 0 ? (
+                                            <div className="dropdown-empty">
+                                                No exercises found
                                             </div>
-                                        ))
-                                    )}
-                                </div>
-                            )}
+                                        ) : (
+                                            filteredDropdown.map((group) => (
+                                                <div
+                                                    key={group.type}
+                                                    className="dropdown-group"
+                                                >
+                                                    <div className="dropdown-type">
+                                                        {group.type}
+                                                    </div>
+                                                    {group.list.map((ex) => (
+                                                        <div
+                                                            key={ex.id}
+                                                            className={`dropdown-item${
+                                                                row.exerciseId ===
+                                                                ex.id
+                                                                    ? ' selected'
+                                                                    : ''
+                                                            }`}
+                                                            onClick={() =>
+                                                                handleSelectExercise(
+                                                                    index,
+                                                                    ex,
+                                                                )
+                                                            }
+                                                        >
+                                                            {ex.name}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Reps input */}
-                        <input
-                            type="number"
-                            className="reps-input"
-                            placeholder="Reps"
-                            value={row.reps}
-                            onChange={(e) =>
-                                handleChange(index, 'reps', e.target.value)
-                            }
-                        />
-                        {/* Weight input */}
-                        <input
-                            type="number"
-                            className="weight-input"
-                            placeholder="Weight"
-                            value={row.weight}
-                            onChange={(e) =>
-                                handleChange(index, 'weight', e.target.value)
-                            }
-                        />
+                        {/* SECOND ROW: REPS + WEIGHT + REMOVE (INLINE) */}
+                        <div className="inputs-row">
+                            <input
+                                type="number"
+                                className="reps-input"
+                                placeholder="Reps"
+                                value={row.reps}
+                                onChange={(e) =>
+                                    handleChange(index, 'reps', e.target.value)
+                                }
+                            />
 
-                        {/* Remove button (only if more than 1 row) */}
-                        {entries.length > 1 && (
-                            <button
-                                className="remove-row-button"
-                                onClick={() => removeRow(index)}
-                            >
-                                Remove
-                            </button>
-                        )}
+                            <input
+                                type="number"
+                                className="weight-input"
+                                placeholder="Weight"
+                                value={row.weight}
+                                onChange={(e) =>
+                                    handleChange(
+                                        index,
+                                        'weight',
+                                        e.target.value,
+                                    )
+                                }
+                            />
+
+                            {entries.length > 1 && (
+                                <button
+                                    className="remove-row-button"
+                                    onClick={() => removeRow(index)}
+                                >
+                                    Remove
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )
             })}

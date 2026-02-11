@@ -254,55 +254,58 @@ export default function WorkoutList({
                                                                                     }{' '}
                                                                                     kg
                                                                                 </span>
-
-                                                                                <div className="flex gap-2">
-                                                                                    <button
-                                                                                        onClick={() =>
-                                                                                            onEdit(
-                                                                                                s,
-                                                                                            )
-                                                                                        }
-                                                                                        className="edit-button"
-                                                                                    >
-                                                                                        Edit
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={() =>
-                                                                                            onDelete(
-                                                                                                s.id,
-                                                                                            )
-                                                                                        }
-                                                                                        className="delete-button"
-                                                                                    >
-                                                                                        Delete
-                                                                                    </button>
-                                                                                </div>
+                                                                                {hideDate && (
+                                                                                    <div className="flex gap-2">
+                                                                                        <button
+                                                                                            onClick={() =>
+                                                                                                onEdit(
+                                                                                                    s,
+                                                                                                )
+                                                                                            }
+                                                                                            className="edit-button"
+                                                                                        >
+                                                                                            Edit
+                                                                                        </button>
+                                                                                        <button
+                                                                                            onClick={() =>
+                                                                                                onDelete(
+                                                                                                    s.id,
+                                                                                                )
+                                                                                            }
+                                                                                            className="delete-button"
+                                                                                        >
+                                                                                            Delete
+                                                                                        </button>
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                         ),
                                                                     )}
                                                                     {/* Toggle PR Section */}
-                                                                    <button
-                                                                        className="pr-toggle-button"
-                                                                        onClick={() =>
-                                                                            setOpenPR(
-                                                                                (
-                                                                                    prev,
-                                                                                ) => ({
-                                                                                    ...prev,
-                                                                                    [exKey]:
-                                                                                        !prev[
-                                                                                            exKey
-                                                                                        ],
-                                                                                }),
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        {openPR[
-                                                                            exKey
-                                                                        ]
-                                                                            ? 'Hide Stats'
-                                                                            : 'Show Stats'}
-                                                                    </button>
+                                                                    {hideDate && (
+                                                                        <button
+                                                                            className="pr-toggle-button"
+                                                                            onClick={() =>
+                                                                                setOpenPR(
+                                                                                    (
+                                                                                        prev,
+                                                                                    ) => ({
+                                                                                        ...prev,
+                                                                                        [exKey]:
+                                                                                            !prev[
+                                                                                                exKey
+                                                                                            ],
+                                                                                    }),
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            {openPR[
+                                                                                exKey
+                                                                            ]
+                                                                                ? 'Hide Stats'
+                                                                                : 'Show Stats'}
+                                                                        </button>
+                                                                    )}
                                                                     {hideDate &&
                                                                         openPR[
                                                                             exKey
