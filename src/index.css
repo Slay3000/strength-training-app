@@ -38,3 +38,18 @@ body {
     background-color: var(--bg);
     color: var(--text);
 }
+
+/* Prevent ANY horizontal scroll */
+html,
+body {
+    width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+/* Make all elements shrink inside screen */
+* {
+    box-sizing: border-box;
+    max-width: 100%;
+}
