@@ -168,3 +168,181 @@
     margin-right: 6px;
     font-size: 16px;
 }
+
+/* -------------------------------------------------------------------
+   GLOBAL MOBILE FIXES
+------------------------------------------------------------------- */
+
+/* Prevent any horizontal scroll */
+html,
+body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+/* Normalize box model */
+* {
+    box-sizing: border-box;
+}
+
+/* Prevent any element from overflowing screen */
+* {
+    max-width: 100%;
+}
+
+/* Smooth mobile font rendering */
+body {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-family: sans-serif;
+}
+
+/* -------------------------------------------------------------------
+   FORM ELEMENTS
+------------------------------------------------------------------- */
+
+form {
+    width: 100%;
+    padding: 16px;
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+input,
+button,
+select {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+
+/* Better mobile tap targets */
+button {
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+/* Fix for date input overflow on iOS */
+input[type='date'] {
+    font-size: 16px;
+}
+
+/* -------------------------------------------------------------------
+   IMAGES
+------------------------------------------------------------------- */
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+}
+
+/* Prevent image stretching container */
+.image-preview {
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto 10px auto;
+    display: block;
+}
+
+/* -------------------------------------------------------------------
+   VIDEO (Barcode Scanner)
+------------------------------------------------------------------- */
+
+video {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    border-radius: 8px;
+    display: block;
+}
+
+/* Prevent scanner from expanding page on mobile */
+.scanner-container {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* -------------------------------------------------------------------
+   LISTS / CARDS
+------------------------------------------------------------------- */
+
+ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+li {
+    width: 100%;
+    max-width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+/* -------------------------------------------------------------------
+   MOBILE MEDIA QUERIES
+------------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+    .form-row {
+        display: block;
+        width: 100%;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    .image-preview {
+        max-width: 150px;
+    }
+}
+
+/* REMOVE IMAGE BUTTON */
+.remove-image-button {
+    background: #ff4d4f;
+    color: white;
+    font-weight: 600;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    max-width: 200px;
+
+    display: block;
+    margin: 12px auto 0 auto; /* CENTER ON MOBILE */
+    text-align: center;
+
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.remove-image-button:hover {
+    background: #d9363e;
+    transform: translateY(-1px);
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+    .remove-image-button {
+        max-width: 100%; /* full-width on small screens */
+        padding: 12px;
+        font-size: 15px;
+        border-radius: 10px;
+    }
+}

@@ -90,36 +90,48 @@
     color: var(--text);
 }
 
-/* ----------------------------------------------
-   PR COLORS — THEME SAFE
-----------------------------------------------*/
+/* REMOVE ROW BUTTON */
+.remove-row-button {
+    background: #ff4d4f;
+    color: white;
+    font-weight: 600;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
 
-/* New PR today — blue highlight */
-.progress-new-pr {
-    color: #3b82f6 !important; /* strong blue */
-    font-weight: 700;
+    /* Prevent overflow issues on mobile */
+    width: auto;
+    max-width: 100%;
+    flex-shrink: 0;
+
+    /* Nice look */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
 }
 
-/* Excellent progress: 90%+ of PR */
-.progress-excellent {
-    color: var(--success, #16a34a) !important; /* bold green */
-    font-weight: 700;
+.remove-row-button:hover {
+    background: #d9363e;
+    transform: translateY(-1px);
 }
 
-/* Good progress: 70–89% of PR */
-.progress-good {
-    color: #d4a017 !important; /* golden yellow */
-    font-weight: 700;
+.remove-row-button:active {
+    transform: scale(0.97);
 }
 
-/* Already exceeded PR */
-.remaining-hit-pr {
-    color: var(--success, #16a34a) !important;
-    font-weight: 700;
-}
+@media (max-width: 760px) {
+    .remove-row-button {
+        padding: 10px;
+        font-size: 14px;
+        width: 100%; /* Full-width for mobile rows */
+        margin-top: 8px;
+    }
 
-/* Close to PR, less than 20% away */
-.remaining-close {
-    color: #d4a017 !important;
-    font-weight: 700;
+    /* Stack weight + reps + remove button nicely */
+    .inputs-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
 }

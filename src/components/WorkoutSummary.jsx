@@ -107,8 +107,16 @@ export default function WorkoutSummary({ workouts }) {
     }
     const sectionBarOptions = {
         responsive: true,
+        maintainAspectRatio: false,
+
         plugins: {
-            title: { display: true, text: 'Weekly Load by Section' },
+            title: {
+                display: true,
+                text: 'Weekly Load by Section',
+                font: {
+                    size: 14, // smaller for mobile
+                },
+            },
             legend: { display: true },
         },
         scales: {
@@ -117,6 +125,15 @@ export default function WorkoutSummary({ workouts }) {
                 title: { display: true, text: 'Load (kg)' },
             },
             x: { title: { display: true, text: 'Section' } },
+        },
+        ticks: {
+            autoSkip: true,
+            maxTicksLimit: 5,
+            color: '#ccc',
+            font: {
+                size: 10,
+                family: 'Inter, sans-serif',
+            },
         },
     }
 
@@ -140,6 +157,8 @@ export default function WorkoutSummary({ workouts }) {
 
     const barOptions = (title) => ({
         responsive: true,
+        maintainAspectRatio: false,
+
         plugins: {
             legend: { display: true },
             title: { display: true, text: title },

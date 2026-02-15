@@ -37,3 +37,54 @@
 .neutral {
     color: #555;
 }
+
+@media (max-width: 760px) {
+    .remove-row-button {
+        padding: 10px;
+        font-size: 14px;
+        width: 100%; /* Full-width for mobile rows */
+        margin-top: 8px;
+    }
+
+    /* Stack weight + reps + remove button nicely */
+    .inputs-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+/* Responsive Chart Container */
+.bar-chart-container,
+.exercise-chart {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.bar-chart-container canvas,
+.exercise-chart canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100%;
+}
+
+@media (max-width: 760px) {
+    .bar-chart-container,
+    .exercise-chart {
+        padding: 0;
+        margin: 0;
+    }
+
+    .bar-chart-container canvas,
+    .exercise-chart canvas {
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .bar-chart-container,
+    .exercise-chart {
+        height: 220px !important;
+    }
+}
