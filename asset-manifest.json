@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/strength-training-app/static/css/main.50a6bba6.css",
-    "main.js": "/strength-training-app/static/js/main.04bf0216.js",
+    "main.css": "/strength-training-app/static/css/main.e757d17f.css",
+    "main.js": "/strength-training-app/static/js/main.38e4eec5.js",
     "index.html": "/strength-training-app/index.html",
-    "main.50a6bba6.css.map": "/strength-training-app/static/css/main.50a6bba6.css.map",
-    "main.04bf0216.js.map": "/strength-training-app/static/js/main.04bf0216.js.map"
+    "main.e757d17f.css.map": "/strength-training-app/static/css/main.e757d17f.css.map",
+    "main.38e4eec5.js.map": "/strength-training-app/static/js/main.38e4eec5.js.map"
   },
   "entrypoints": [
-    "static/css/main.50a6bba6.css",
-    "static/js/main.04bf0216.js"
+    "static/css/main.e757d17f.css",
+    "static/js/main.38e4eec5.js"
   ]
 }
