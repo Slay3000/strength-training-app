@@ -28,6 +28,7 @@ import {
 import { getLastWeekTip, getThisWeekTip } from './helpers/tipHelpers'
 
 // components
+import TopMenu from './components/TopMenu'
 import WorkoutForm from './components/WorkoutForm'
 import WorkoutList from './components/WorkoutList'
 import WorkoutSummary from './components/WorkoutSummary'
@@ -262,44 +263,7 @@ export default function App() {
     // -----------------------------------------------------------
     return (
         <div className="app-container">
-            <div className="tabs">
-                <button
-                    className={tab === 'current' ? 'active' : ''}
-                    onClick={() => setTab('current')}
-                >
-                    Current
-                </button>
-                <button
-                    className={tab === 'history' ? 'active' : ''}
-                    onClick={() => setTab('history')}
-                >
-                    History
-                </button>
-                <button
-                    className={tab === 'summary' ? 'active' : ''}
-                    onClick={() => setTab('summary')}
-                >
-                    Summary
-                </button>
-                <button
-                    className={tab === 'preferences' ? 'active' : ''}
-                    onClick={() => setTab('preferences')}
-                >
-                    Preferences
-                </button>
-                <button
-                    className={tab === 'targets' ? 'active' : ''}
-                    onClick={() => setTab('targets')}
-                >
-                    Targets
-                </button>
-                <button
-                    className={tab === 'add-exercise' ? 'active' : ''}
-                    onClick={() => setTab('add-exercise')}
-                >
-                    Add Exercise
-                </button>
-            </div>
+            <TopMenu tab={tab} setTab={setTab} />
 
             <div className="tab-content">
                 {tab === 'current' && (
