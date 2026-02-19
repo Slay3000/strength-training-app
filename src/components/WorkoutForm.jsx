@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { dbPromise } from '../localDB'
 import './WorkoutForm.css'
 
 export default function WorkoutForm({
@@ -20,14 +21,33 @@ export default function WorkoutForm({
     // Fetch exercises once
     useEffect(() => {
         async function fetchExercises() {
+            const db = await dbPromise
+
+            if (!navigator.onLine) {
+                const cached = await db.getAll('exercises')
+                setExercises(cached || [])
+                return
+            }
+
             const { data, error } = await supabase
                 .from('exercises')
                 .select('*')
                 .order('type', { ascending: true })
                 .order('name', { ascending: true })
-            if (error) console.error('Error fetching exercises:', error)
-            else setExercises(data || [])
+
+            if (error) {
+                console.error('Error fetching exercises:', error)
+                return
+            }
+
+            // Cache them offline
+            const tx = db.transaction('exercises', 'readwrite')
+            data.forEach((ex) => tx.store.put(ex))
+            await tx.done
+
+            setExercises(data)
         }
+
         fetchExercises()
     }, [])
 
