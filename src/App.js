@@ -37,8 +37,6 @@ import AddExerciseForm from './components/AddExerciseForm'
 import TargetsForm from './components/TargetsForm'
 import LoginForm from './components/LoginForm'
 
-import { dbPromise } from './localDB'
-import { supabase } from './lib/supabaseClient'
 import './App.css'
 
 export default function App() {
@@ -92,27 +90,6 @@ export default function App() {
 
         loadData()
     }, [USER_ID])
-
-    useEffect(() => {
-        async function syncExercises() {
-            if (!navigator.onLine) return
-            const db = await dbPromise
-
-            const pending = await db.getAll('pendingExercises')
-            if (!pending.length) return
-
-            for (const exercise of pending) {
-                await supabase.from('exercises').insert({
-                    name: exercise.name,
-                    type: exercise.type,
-                })
-                await db.delete('pendingExercises', exercise.tempId)
-            }
-        }
-
-        window.addEventListener('online', syncExercises)
-        return () => window.removeEventListener('online', syncExercises)
-    }, [])
 
     // -----------------------------------------------------------
     // AUTH + LOGIN SCREENS
