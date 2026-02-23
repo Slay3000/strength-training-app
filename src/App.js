@@ -35,6 +35,7 @@ import WorkoutSummary from './components/WorkoutSummary'
 import Preferences from './components/Preferences'
 import AddExerciseForm from './components/AddExerciseForm'
 import TargetsForm from './components/TargetsForm'
+import LoginForm from './components/LoginForm'
 
 import { dbPromise } from './localDB'
 import { supabase } from './lib/supabaseClient'
@@ -117,14 +118,8 @@ export default function App() {
     // AUTH + LOGIN SCREENS
     // -----------------------------------------------------------
     if (loading) return <p>Loading...</p>
-
     if (!USER_ID) {
-        return (
-            <div className="auth-container">
-                <h2>Sign In / Sign Up</h2>
-                <p>Please sign in to continue.</p>
-            </div>
-        )
+        return <LoginForm />
     }
 
     // -----------------------------------------------------------
