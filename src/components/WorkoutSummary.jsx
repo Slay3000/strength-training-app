@@ -13,7 +13,7 @@ import {
 } from 'chart.js'
 import './WorkoutSummary.css'
 import { WorkoutDay, WorkoutWeek } from '../models/workoutModels'
-
+import { computeRecoveryScores } from '../helpers/recoveryScore'
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -64,13 +64,12 @@ export default function WorkoutSummary({ workouts }) {
     }
 
     const allDays = createWorkoutDays(workouts)
-    const thisWeekDays = allDays.filter(
-        (d) => new Date(d.date) >= weekStartDate,
-    )
+    const weekStartStr = toYMD(weekStartDate)
+    const prevWeekStartStr = toYMD(prevWeekStartDate)
+
+    const thisWeekDays = allDays.filter((d) => d.date >= weekStartStr)
     const lastWeekDays = allDays.filter(
-        (d) =>
-            new Date(d.date) >= prevWeekStartDate &&
-            new Date(d.date) < weekStartDate,
+        (d) => d.date >= prevWeekStartStr && d.date < weekStartStr,
     )
 
     const currentWeek = new WorkoutWeek(
@@ -124,6 +123,26 @@ export default function WorkoutSummary({ workouts }) {
         }
     }
 
+    const maxAvgLoad = Math.max(previousWeek.avgLoadPerDay, bestOverallWeekLoad)
+    const weeklyAvgSuggestedMax = Math.max(maxAvgLoad * 1.2, 1000) // Ensure a minimum suggested max
+
+    const recoveryStats = computeRecoveryScores(
+        allDays,
+        thisWeekDays,
+        currentWeek,
+        previousWeek,
+        sectionLabels,
+    )
+
+    const maxPrevSectionLoad = Math.max(
+        ...sectionLabels.map((t) => weekComparison[t]?.previousLoad || 0),
+    )
+    const maxBestSectionLoad = Math.max(
+        ...sectionLabels.map((t) => bestSectionLoads[t] || 0),
+    )
+    const sectionSuggestedMax =
+        Math.max(maxPrevSectionLoad, maxBestSectionLoad) * 1.2
+
     // ---------- Weekly comparison by section (bar chart) ----------
 
     const sectionComparisonBarData = {
@@ -168,6 +187,7 @@ export default function WorkoutSummary({ workouts }) {
             y: {
                 beginAtZero: true,
                 title: { display: true, text: 'Load (kg)' },
+                suggestedMax: sectionSuggestedMax,
             },
             x: { title: { display: true, text: 'Section' } },
         },
@@ -214,6 +234,7 @@ export default function WorkoutSummary({ workouts }) {
             y: {
                 beginAtZero: true,
                 title: { display: true, text: 'Load (kg/day)' },
+                suggestedMax: weeklyAvgSuggestedMax,
             },
             x: { title: { display: true, text: 'Section' } },
         },
@@ -222,6 +243,84 @@ export default function WorkoutSummary({ workouts }) {
     // ---------- Render ----------
     return (
         <div className="summary-container">
+            {/* Recovery Score Section */}
+            <div
+                className="summary-section"
+                style={{ borderLeft: `5px solid ${recoveryStats.color}` }}
+            >
+                {' '}
+                {/* Use recoveryStats.overall.color */}
+                {/* Overall Recovery Score - using recoveryStats.overall for consistency */}
+                <h2 className="collapsible-header">🛌 Recovery Score</h2>
+                <div className="stats-row">
+                    <div className="stats-block">
+                        <span
+                            style={{
+                                fontSize: '2rem',
+                                fontWeight: 'bold',
+                                color: recoveryStats.overall.color,
+                            }}
+                        >
+                            {recoveryStats.overall.score}%
+                        </span>
+                    </div>
+                    <div className="stats-block">
+                        <strong>Status:</strong> {recoveryStats.overall.label}{' '}
+                        {/* Use recoveryStats.overall.label */}
+                        <p
+                            style={{
+                                fontSize: '0.8rem',
+                                color: '#999',
+                                margin: '4px 0 0',
+                            }}
+                        >
+                            Based on weekly volume jumps and training frequency.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Recovery Score by Section */}
+            <div className="summary-section">
+                <h2
+                    className="collapsible-header"
+                    onClick={() => toggleSection('recoveryBySection')}
+                >
+                    💪 Recovery Score by Section
+                </h2>
+                {openSections.recoveryBySection && (
+                    <div className="exercise-breakdown">
+                        {Object.entries(recoveryStats.sections).map(
+                            ([sectionName, stats]) => (
+                                <div
+                                    key={sectionName}
+                                    className="exercise-card"
+                                >
+                                    <strong>{sectionName}</strong>
+                                    <div className="stats-row">
+                                        <div className="stats-block">
+                                            <span
+                                                style={{
+                                                    fontSize: '1.2rem',
+                                                    fontWeight: 'bold',
+                                                    color: stats.color, // Use stats.color
+                                                }}
+                                            >
+                                                {stats.score}%
+                                            </span>
+                                        </div>
+                                        <div className="stats-block">
+                                            <strong>Status:</strong>{' '}
+                                            {stats.label}{' '}
+                                            {/* Use stats.label */}
+                                        </div>
+                                    </div>
+                                </div>
+                            ),
+                        )}
+                    </div>
+                )}
+            </div>
             {/* Overall Summary */}
             <div className="summary-section">
                 <h2
@@ -238,6 +337,10 @@ export default function WorkoutSummary({ workouts }) {
                                 <strong>Total Weekly Load</strong>{' '}
                                 {currentWeek.totalLoad.toLocaleString()} kg
                             </div>
+                            <div className="stats-block">
+                                <strong>Previous Week Total Load</strong>{' '}
+                                {previousWeek.totalLoad.toLocaleString()} kg
+                            </div>
                             <div
                                 className={`stats-block ${
                                     weekComparison.overall.diff > 0
@@ -252,6 +355,10 @@ export default function WorkoutSummary({ workouts }) {
                                     ? `+${weekComparison.overall.diff}`
                                     : weekComparison.overall.diff}{' '}
                                 kg
+                            </div>
+                            <div className="stats-block">
+                                <strong>Best Week Total Load</strong>{' '}
+                                {(bestOverallWeekLoad * 7).toLocaleString()} kg
                             </div>
                         </div>
 
