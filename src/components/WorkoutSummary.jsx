@@ -81,11 +81,51 @@ export default function WorkoutSummary({ workouts }) {
         prevWeekStartDate,
         lastWeekDays.flatMap((d) => d.workouts),
     )
+
     const weekComparison = currentWeek.compareTo(previousWeek)
-    // ---------- Weekly comparison by section (bar chart) ----------
+
+    // Calculate best week data
+    const allWeekStartDates = [
+        ...new Set(
+            workouts.map((w) => {
+                const date = new Date(w.created_at)
+                const dayOfWeek = date.getDay()
+                const diffToMonday = (dayOfWeek + 6) % 7
+                const weekStart = new Date(date)
+                weekStart.setDate(date.getDate() - diffToMonday)
+                weekStart.setHours(0, 0, 0, 0)
+                return weekStart.toISOString().slice(0, 10)
+            }),
+        ),
+    ].sort()
+
+    let bestOverallWeekLoad = 0
+    const bestSectionLoads = {}
     const sectionLabels = Object.keys(weekComparison).filter(
         (k) => k !== 'overall',
     )
+    for (const ws of allWeekStartDates) {
+        const weekWorkouts = allDays.filter(
+            (d) =>
+                new Date(d.date) >= new Date(ws) &&
+                new Date(d.date) <
+                    new Date(new Date(ws).setDate(new Date(ws).getDate() + 7)),
+        )
+        const week = new WorkoutWeek(
+            new Date(ws),
+            weekWorkouts.flatMap((d) => d.workouts),
+        )
+        bestOverallWeekLoad = Math.max(bestOverallWeekLoad, week.avgLoadPerDay)
+        for (const sectionName of sectionLabels) {
+            bestSectionLoads[sectionName] = Math.max(
+                bestSectionLoads[sectionName] || 0,
+                week.getSection(sectionName).totalWeight,
+            )
+        }
+    }
+
+    // ---------- Weekly comparison by section (bar chart) ----------
+
     const sectionComparisonBarData = {
         labels: sectionLabels,
         datasets: [
@@ -102,6 +142,11 @@ export default function WorkoutSummary({ workouts }) {
                     (t) => weekComparison[t]?.currentLoad || 0,
                 ),
                 backgroundColor: 'rgba(75,192,192,0.6)',
+            },
+            {
+                label: 'Best Week',
+                data: sectionLabels.map((t) => bestSectionLoads[t] || 0),
+                backgroundColor: 'rgba(255,206,86,0.6)',
             },
         ],
     }
@@ -139,17 +184,19 @@ export default function WorkoutSummary({ workouts }) {
 
     // ---------- Weekly avg chart ----------
     const weeklyAvgBarData = {
-        labels: ['Previous Week', 'Current Week'],
+        labels: ['Previous Week', 'Current Week', 'Best Week'],
         datasets: [
             {
                 label: 'Weekly Avg Load (kg/day)',
                 data: [
                     previousWeek.avgLoadPerDay.toFixed(0),
                     currentWeek.avgLoadPerDay.toFixed(0),
+                    bestOverallWeekLoad.toFixed(0),
                 ],
                 backgroundColor: [
                     'rgba(255,99,132,0.5)',
                     'rgba(75,192,192,0.6)',
+                    'rgba(75,22,192,0.6)',
                 ],
             },
         ],
