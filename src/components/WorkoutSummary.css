@@ -55,15 +55,17 @@
 /* Responsive Chart Container */
 .bar-chart-container,
 .exercise-chart {
+    position: relative;
     width: 100%;
     max-width: 100%;
+    height: 250px;
     overflow: hidden;
 }
 
 .bar-chart-container canvas,
 .exercise-chart canvas {
     width: 100% !important;
-    height: auto !important;
+    height: 100% !important;
     max-width: 100%;
 }
 
@@ -72,19 +74,13 @@
     .exercise-chart {
         padding: 0;
         margin: 0;
+        height: 220px !important;
     }
 
     .bar-chart-container canvas,
     .exercise-chart canvas {
         max-width: 100% !important;
         width: 100% !important;
-        height: auto !important;
-    }
-}
-
-@media (max-width: 760px) {
-    .bar-chart-container,
-    .exercise-chart {
-        height: 220px !important;
+        height: 100% !important;
     }
 }

@@ -123,8 +123,13 @@ export default function WorkoutSummary({ workouts }) {
         }
     }
 
-    const maxAvgLoad = Math.max(previousWeek.avgLoadPerDay, bestOverallWeekLoad)
-    const weeklyAvgSuggestedMax = Math.max(maxAvgLoad * 1.2, 1000) // Ensure a minimum suggested max
+    const maxAvgLoad = Math.max(
+        previousWeek.avgLoadPerDay,
+        currentWeek.avgLoadPerDay,
+        bestOverallWeekLoad,
+    )
+    const weeklyAvgSuggestedMax =
+        maxAvgLoad > 0 ? Math.ceil(maxAvgLoad * 1.15) : undefined
 
     const recoveryStats = computeRecoveryScores(
         allDays,
@@ -135,13 +140,24 @@ export default function WorkoutSummary({ workouts }) {
     )
 
     const maxPrevSectionLoad = Math.max(
+        0,
         ...sectionLabels.map((t) => weekComparison[t]?.previousLoad || 0),
     )
+    const maxCurrSectionLoad = Math.max(
+        0,
+        ...sectionLabels.map((t) => weekComparison[t]?.currentLoad || 0),
+    )
     const maxBestSectionLoad = Math.max(
+        0,
         ...sectionLabels.map((t) => bestSectionLoads[t] || 0),
     )
+    const maxSectionVal = Math.max(
+        maxPrevSectionLoad,
+        maxCurrSectionLoad,
+        maxBestSectionLoad,
+    )
     const sectionSuggestedMax =
-        Math.max(maxPrevSectionLoad, maxBestSectionLoad) * 1.2
+        maxSectionVal > 0 ? Math.ceil(maxSectionVal * 1.15) : undefined
 
     // ---------- Weekly comparison by section (bar chart) ----------
 
@@ -188,16 +204,25 @@ export default function WorkoutSummary({ workouts }) {
                 beginAtZero: true,
                 title: { display: true, text: 'Load (kg)' },
                 suggestedMax: sectionSuggestedMax,
+                ticks: {
+                    autoSkip: true,
+                    maxTicksLimit: 5,
+                    color: '#ccc',
+                    font: {
+                        size: 10,
+                        family: 'Inter, sans-serif',
+                    },
+                },
             },
-            x: { title: { display: true, text: 'Section' } },
-        },
-        ticks: {
-            autoSkip: true,
-            maxTicksLimit: 5,
-            color: '#ccc',
-            font: {
-                size: 10,
-                family: 'Inter, sans-serif',
+            x: {
+                title: { display: true, text: 'Section' },
+                ticks: {
+                    color: '#ccc',
+                    font: {
+                        size: 10,
+                        family: 'Inter, sans-serif',
+                    },
+                },
             },
         },
     }
@@ -235,10 +260,82 @@ export default function WorkoutSummary({ workouts }) {
                 beginAtZero: true,
                 title: { display: true, text: 'Load (kg/day)' },
                 suggestedMax: weeklyAvgSuggestedMax,
+                ticks: {
+                    autoSkip: true,
+                    maxTicksLimit: 5,
+                    color: '#ccc',
+                    font: {
+                        size: 10,
+                        family: 'Inter, sans-serif',
+                    },
+                },
             },
-            x: { title: { display: true, text: 'Section' } },
+            x: {
+                title: { display: true, text: 'Period' },
+                ticks: {
+                    color: '#ccc',
+                    font: {
+                        size: 10,
+                        family: 'Inter, sans-serif',
+                    },
+                },
+            },
         },
     })
+
+    const exerciseLineOptions = (title, dataValues = []) => {
+        let suggestedMin
+        let suggestedMax
+        if (dataValues.length > 0) {
+            const minVal = Math.min(...dataValues)
+            const maxVal = Math.max(...dataValues)
+            const diff = maxVal - minVal
+            if (diff === 0) {
+                suggestedMin = Math.max(0, minVal * 0.8 - 1)
+                suggestedMax = maxVal * 1.2 + 1
+            } else {
+                suggestedMin = Math.max(0, Math.floor(minVal - diff * 0.15))
+                suggestedMax = Math.ceil(maxVal + diff * 0.15)
+            }
+        }
+
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: title,
+                    font: { size: 13 },
+                },
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    suggestedMin,
+                    suggestedMax,
+                    title: { display: true, text: 'Load (kg)' },
+                    ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: 5,
+                        precision: 0,
+                        color: '#ccc',
+                        font: { size: 10, family: 'Inter, sans-serif' },
+                    },
+                },
+                x: {
+                    title: { display: true, text: 'Date' },
+                    ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: 6,
+                        color: '#ccc',
+                        font: { size: 10, family: 'Inter, sans-serif' },
+                    },
+                },
+            },
+        }
+    }
 
     // ---------- Render ----------
     return (
@@ -621,8 +718,12 @@ export default function WorkoutSummary({ workouts }) {
                                                             data={
                                                                 exerciseChartData
                                                             }
-                                                            options={barOptions(
+                                                            options={exerciseLineOptions(
                                                                 `${exName} Load Over Time`,
+                                                                sortedDates.map(
+                                                                    (d) =>
+                                                                        dailyMap[d],
+                                                                ),
                                                             )}
                                                         />
                                                     </div>
