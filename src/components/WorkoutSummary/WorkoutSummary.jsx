@@ -12,8 +12,9 @@ import {
     Legend,
 } from 'chart.js'
 import './WorkoutSummary.css'
-import { WorkoutDay, WorkoutWeek } from '../models/workoutModels'
-import { computeRecoveryScores } from '../helpers/recoveryScore'
+import { WorkoutDay, WorkoutWeek } from '../../models/workoutModels'
+import { computeRecoveryScores } from '../../helpers/recoveryScore'
+import { calculate1RM } from '../../helpers/workout'
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -27,6 +28,7 @@ ChartJS.register(
 
 export default function WorkoutSummary({ workouts }) {
     const [openSections, setOpenSections] = useState({})
+    const [exerciseMetrics, setExerciseMetrics] = useState({}) // exName -> 'load' | 'e1rm'
 
     const toggleSection = (key) =>
         setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -283,7 +285,7 @@ export default function WorkoutSummary({ workouts }) {
         },
     })
 
-    const exerciseLineOptions = (title, dataValues = []) => {
+    const exerciseLineOptions = (title, dataValues = [], yTitle = 'Load (kg)') => {
         let suggestedMin
         let suggestedMax
         if (dataValues.length > 0) {
@@ -616,6 +618,7 @@ export default function WorkoutSummary({ workouts }) {
                                             }
 
                                             // Historical data for graph (all workouts)
+                                            const metric = exerciseMetrics[exName] || 'load'
                                             const dailyMap = {}
                                             workouts
                                                 .filter(
@@ -629,12 +632,13 @@ export default function WorkoutSummary({ workouts }) {
                                                     const ymd = toYMD(
                                                         w.created_at,
                                                     )
-                                                    const load =
-                                                        (w.weight || 0) *
-                                                        (w.reps || 0)
-                                                    dailyMap[ymd] =
-                                                        (dailyMap[ymd] || 0) +
-                                                        load
+                                                    if (metric === 'e1rm') {
+                                                        const e1rm = calculate1RM(w.weight, w.reps)
+                                                        dailyMap[ymd] = Math.max(dailyMap[ymd] || 0, e1rm)
+                                                    } else {
+                                                        const load = (w.weight || 0) * (w.reps || 0)
+                                                        dailyMap[ymd] = (dailyMap[ymd] || 0) + load
+                                                    }
                                                 })
 
                                             const sortedDates =
@@ -643,14 +647,13 @@ export default function WorkoutSummary({ workouts }) {
                                                 labels: sortedDates,
                                                 datasets: [
                                                     {
-                                                        label: `${exName} Load Over Time`,
+                                                        label: metric === 'e1rm' ? `${exName} Est. 1RM Over Time` : `${exName} Load Over Time`,
+                                                        borderColor: metric === 'e1rm' ? '#e31a1c' : '#1f78b4',
+                                                        backgroundColor: metric === 'e1rm' ? 'rgba(227, 26, 28, 0.2)' : 'rgba(31, 120, 180, 0.2)',
                                                         data: sortedDates.map(
                                                             (d) => dailyMap[d],
                                                         ),
-                                                        borderColor: '#1f78b4',
-                                                        backgroundColor:
-                                                            'rgba(31, 120, 180, 0.2)',
-                                                        fill: true,
+                                                                                                                fill: true,
                                                         tension: 0.3,
                                                     },
                                                 ],
@@ -708,10 +711,43 @@ export default function WorkoutSummary({ workouts }) {
                                                             </div>
                                                         )}
                                                     </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 4 }}>
+                                                        <span style={{ fontSize: '0.85rem', color: '#aaa' }}>Graph Metric:</span>
+                                                        <div style={{ display: 'flex', gap: 6 }}>
+                                                            <button
+                                                                style={{
+                                                                    padding: '2px 8px',
+                                                                    fontSize: '0.75rem',
+                                                                    borderRadius: 4,
+                                                                    border: '1px solid #444',
+                                                                    background: metric === 'load' ? '#1f78b4' : '#222',
+                                                                    color: '#fff',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                onClick={() => setExerciseMetrics(prev => ({ ...prev, [exName]: 'load' }))}
+                                                            >
+                                                                Total Volume
+                                                            </button>
+                                                            <button
+                                                                style={{
+                                                                    padding: '2px 8px',
+                                                                    fontSize: '0.75rem',
+                                                                    borderRadius: 4,
+                                                                    border: '1px solid #444',
+                                                                    background: metric === 'e1rm' ? '#e31a1c' : '#222',
+                                                                    color: '#fff',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                onClick={() => setExerciseMetrics(prev => ({ ...prev, [exName]: 'e1rm' }))}
+                                                            >
+                                                                Est. 1RM
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                     <div
                                                         className="exercise-chart"
                                                         style={{
-                                                            marginTop: 10,
+                                                            marginTop: 6,
                                                         }}
                                                     >
                                                         <Line
@@ -719,11 +755,12 @@ export default function WorkoutSummary({ workouts }) {
                                                                 exerciseChartData
                                                             }
                                                             options={exerciseLineOptions(
-                                                                `${exName} Load Over Time`,
+                                                                metric === 'e1rm' ? `${exName} Est. 1RM Over Time` : `${exName} Load Over Time`,
                                                                 sortedDates.map(
                                                                     (d) =>
                                                                         dailyMap[d],
                                                                 ),
+                                                                metric === 'e1rm' ? 'Est. 1RM (kg)' : 'Load (kg)'
                                                             )}
                                                         />
                                                     </div>

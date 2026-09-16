@@ -236,6 +236,7 @@ export class WorkoutWeek {
                 currentLoad: curr.totalWeight,
                 loadToGo,
                 avgWeeklyLoad: currentWeekAvg,
+                previousWeekAvg,
                 toGoVsLastWeek: loadToGo,
                 exercises: curr.exercises,
             }

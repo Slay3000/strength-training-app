@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { supabase } from '../../lib/supabaseClient'
 import './Preferences.css'
 
 export default function Preferences({ hiddenExercises, setHiddenExercises }) {

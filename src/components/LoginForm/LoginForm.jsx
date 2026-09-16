@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { supabase } from '../../lib/supabaseClient'
 import './LoginForm.css'
 
 export default function LoginForm() {
@@ -82,8 +82,7 @@ export default function LoginForm() {
                           : 'Sign Up'}
                 </button>
             </form>
-            {/* 
-            <div className="login-switch">
+            {<div className="login-switch">
                 {mode === 'login' ? (
                     <span>
                         Don’t have an account?{' '}
@@ -99,7 +98,7 @@ export default function LoginForm() {
                         </button>
                     </span>
                 )}
-            </div> */}
+            </div>}
         </div>
     )
 }

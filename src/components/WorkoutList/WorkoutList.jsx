@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { WorkoutWeek, WorkoutDay } from '../models/workoutModels'
+import { calculate1RM } from '../../helpers/workout'
 import './WorkoutList.css'
 
 export function groupWorkouts(workouts) {
@@ -22,6 +22,7 @@ function computePRStats(workouts, exerciseId, todaySets) {
     if (!exerciseId) {
         return {
             setPR: 0,
+            maxE1RM: 0,
             exercisePR: 0,
             todayLoad: 0,
             progress: 0,
@@ -33,6 +34,11 @@ function computePRStats(workouts, exerciseId, todaySets) {
 
     // --- Set PR = highest weight ever ---
     const setPR = all.length ? Math.max(...all.map((w) => w.weight || 0)) : 0
+
+    // --- Max Estimated 1RM ever ---
+    const maxE1RM = all.length
+        ? Math.max(...all.map((w) => calculate1RM(w.weight || 0, w.reps || 0)))
+        : 0
 
     // --- Exercise PR = best daily total load ---
     const dailyTotals = {}
@@ -57,7 +63,7 @@ function computePRStats(workouts, exerciseId, todaySets) {
 
     const remaining = exercisePR - todayLoad
 
-    return { setPR, exercisePR, todayLoad, progress, remaining }
+    return { setPR, maxE1RM, exercisePR, todayLoad, progress, remaining }
 }
 export default function WorkoutList({
     workouts,
@@ -198,6 +204,7 @@ export default function WorkoutList({
 
                                                     const {
                                                         setPR,
+                                                        maxE1RM,
                                                         exercisePR,
                                                         todayLoad,
                                                         progress,

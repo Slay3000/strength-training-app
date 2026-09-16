@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { supabase } from '../../lib/supabaseClient'
 import './WorkoutForm.css'
 
 export default function WorkoutForm({
@@ -44,7 +44,7 @@ export default function WorkoutForm({
         document.addEventListener('mousedown', handleClickOutside)
         return () =>
             document.removeEventListener('mousedown', handleClickOutside)
-    }, [dropdownOpen])
+    }, [dropdownOpen, setDropdownOpen])
 
     // Handlers
     const addRow = () => {
@@ -236,6 +236,12 @@ export default function WorkoutForm({
                                                 </div>
                                             ))
                                         )}
+                                    </div>
+                                )}
+                                {stats.last && (
+                                    <div style={{ fontSize: "0.8rem", color: "#999", marginTop: 4 }}>
+                                        Last: {stats.last.reps} × {stats.last.weight} kg
+                                        {stats.max && ` | Max: ${stats.max.reps} × ${stats.max.weight} kg`}
                                     </div>
                                 )}
                             </div>
