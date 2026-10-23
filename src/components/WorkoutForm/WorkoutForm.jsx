@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { fetchExercises } from '../../services/exercisesService'
+import { getExerciseHistoryStats } from '../../utils/workoutStats'
+import WorkoutFormRow from './WorkoutFormRow'
 import './WorkoutForm.css'
 
 export default function WorkoutForm({
@@ -17,18 +19,14 @@ export default function WorkoutForm({
     const [exercises, setExercises] = useState([])
     const containerRef = useRef(null)
 
-    // Fetch exercises once
+    // Fetch exercises on mount
     useEffect(() => {
-        async function fetchExercises() {
-            const { data, error } = await supabase
-                .from('exercises')
-                .select('*')
-                .order('type', { ascending: true })
-                .order('name', { ascending: true })
+        async function loadExercises() {
+            const { data, error } = await fetchExercises()
             if (error) console.error('Error fetching exercises:', error)
             else setExercises(data || [])
         }
-        fetchExercises()
+        loadExercises()
     }, [])
 
     // Close dropdown when clicking outside
@@ -93,7 +91,6 @@ export default function WorkoutForm({
     }
 
     const handleSubmit = () => {
-        // Validate all rows
         for (let i = 0; i < entries.length; i++) {
             const { exerciseId, reps, weight } = entries[i]
             if (!exerciseId || !reps || !weight) {
@@ -103,7 +100,6 @@ export default function WorkoutForm({
         }
 
         onAdd(entries)
-
         // Reset only reps for all rows, keep exercises and weights
         setEntries(entries.map((e) => ({ ...e, reps: '' })))
     }
@@ -121,46 +117,15 @@ export default function WorkoutForm({
         return acc
     }, {})
 
-    // Helper to get last, max, and delta for an exercise ID
-    const getStats = (exerciseId) => {
-        if (!workouts || !exerciseId)
-            return { last: null, max: null, delta: null }
-
-        const exWorkouts = workouts.filter((w) => w.exercise_id === exerciseId)
-        if (!exWorkouts.length) return { last: null, max: null, delta: null }
-
-        const sorted = [...exWorkouts].sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at),
-        )
-
-        const last = sorted[0]
-        const max = exWorkouts.reduce((m, w) => {
-            const load = (w.weight || 0) * (w.reps || 0)
-            const currentMax = (m.weight || 0) * (m.reps || 0)
-            return load > currentMax ? w : m
-        }, sorted[0])
-        const delta =
-            sorted.length > 1
-                ? (last.weight || 0) * (last.reps || 0) -
-                  (sorted[1].weight || 0) * (sorted[1].reps || 0)
-                : null
-
-        return { last, max, delta }
-    }
-
     return (
         <div className="workout-form" ref={containerRef}>
-            {/* Add Exercise button on top */}
             <button className="add-exercise-button" onClick={addRow}>
                 Add Exercise
             </button>
 
             {entries.map((row, index) => {
-                const stats = row.exerciseId
-                    ? getStats(row.exerciseId)
-                    : { last: null, max: null, delta: null }
+                const stats = getExerciseHistoryStats(workouts, row.exerciseId)
 
-                // Filter dropdown based on typed text
                 const filteredDropdown = Object.keys(groupedExercises).length
                     ? Object.entries(groupedExercises)
                           .map(([type, list]) => ({
@@ -177,116 +142,38 @@ export default function WorkoutForm({
                                       : true,
                               ),
                           }))
-                          .filter((group) => group.list.length > 0) // <-- HIDE EMPTY GROUPS
+                          .filter((group) => group.list.length > 0)
                     : []
 
                 return (
-                    <div key={index} className="exercise-row">
-                        {/* FIRST ROW: EXERCISE SELECTOR (FULL WIDTH) */}
-                        <div className="exercise-select-wrapper">
-                            <div className="exercise-select-container">
-                                <input
-                                    type="text"
-                                    className="exercise-input"
-                                    placeholder="Select exercise..."
-                                    value={searchTerms[index]}
-                                    onChange={(e) => {
-                                        const terms = [...searchTerms]
-                                        terms[index] = e.target.value
-                                        setSearchTerms(terms)
-                                        toggleDropdown(index, true)
-                                    }}
-                                    onFocus={() => toggleDropdown(index, true)}
-                                />
-
-                                {dropdownOpen[index] && (
-                                    <div className="dropdown-list">
-                                        {filteredDropdown.length === 0 ? (
-                                            <div className="dropdown-empty">
-                                                No exercises found
-                                            </div>
-                                        ) : (
-                                            filteredDropdown.map((group) => (
-                                                <div
-                                                    key={group.type}
-                                                    className="dropdown-group"
-                                                >
-                                                    <div className="dropdown-type">
-                                                        {group.type}
-                                                    </div>
-                                                    {group.list.map((ex) => (
-                                                        <div
-                                                            key={ex.id}
-                                                            className={`dropdown-item${
-                                                                row.exerciseId ===
-                                                                ex.id
-                                                                    ? ' selected'
-                                                                    : ''
-                                                            }`}
-                                                            onClick={() =>
-                                                                handleSelectExercise(
-                                                                    index,
-                                                                    ex,
-                                                                )
-                                                            }
-                                                        >
-                                                            {ex.name}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                )}
-                                {stats.last && (
-                                    <div style={{ fontSize: "0.8rem", color: "#999", marginTop: 4 }}>
-                                        Last: {stats.last.reps} × {stats.last.weight} kg
-                                        {stats.max && ` | Max: ${stats.max.reps} × ${stats.max.weight} kg`}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* SECOND ROW: REPS + WEIGHT + REMOVE (INLINE) */}
-                        <div className="inputs-row">
-                            <input
-                                type="number"
-                                className="reps-input"
-                                placeholder="Reps"
-                                value={row.reps}
-                                onChange={(e) =>
-                                    handleChange(index, 'reps', e.target.value)
-                                }
-                            />
-
-                            <input
-                                type="number"
-                                className="weight-input"
-                                placeholder="Weight"
-                                value={row.weight}
-                                onChange={(e) =>
-                                    handleChange(
-                                        index,
-                                        'weight',
-                                        e.target.value,
-                                    )
-                                }
-                            />
-
-                            {entries.length > 1 && (
-                                <button
-                                    className="remove-row-button"
-                                    onClick={() => removeRow(index)}
-                                >
-                                    Remove
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                    <WorkoutFormRow
+                        key={index}
+                        row={row}
+                        index={index}
+                        searchTerm={searchTerms[index]}
+                        onSearchTermChange={(val) => {
+                            const terms = [...searchTerms]
+                            terms[index] = val
+                            setSearchTerms(terms)
+                        }}
+                        isDropdownOpen={dropdownOpen[index]}
+                        onToggleDropdown={(open) =>
+                            toggleDropdown(index, open)
+                        }
+                        filteredDropdown={filteredDropdown}
+                        onSelectExercise={(ex) =>
+                            handleSelectExercise(index, ex)
+                        }
+                        onChangeField={(field, val) =>
+                            handleChange(index, field, val)
+                        }
+                        onRemoveRow={() => removeRow(index)}
+                        canRemove={entries.length > 1}
+                        stats={stats}
+                    />
                 )
             })}
 
-            {/* Submit button at bottom */}
             <button className="submit-button" onClick={handleSubmit}>
                 {entries.length === 1 ? 'Add' : 'Add Set'}
             </button>

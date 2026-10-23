@@ -19,13 +19,13 @@ import {
 import {
     computePrevStatsBySectionAndExercise,
     computeWeeklySectionAverages,
-} from './helpers/workout'
+} from './utils/workoutStats'
 import {
     computeTodayLoad,
     computeCurrentProportions,
     computeTargetProportions,
-} from './helpers/weeklyStats'
-import { getLastWeekTip, getThisWeekTip } from './helpers/tipHelpers'
+} from './utils/muscleStats'
+import { computeTrainingTips } from './utils/tips'
 
 // components
 import TopMenu from './components/TopMenu'
@@ -116,54 +116,12 @@ export default function App() {
     const targetProportions = computeTargetProportions(muscleTargets)
     const currentProportions = computeCurrentProportions(currentWeekLoads)
 
-    // ---- Last Week Tip ----
-    const lastWeekLoads = weeklyAverages?.sections || {}
-    const totalLastWeek = Object.values(lastWeekLoads).reduce(
-        (sum, sec) => sum + (sec.previousWeekAvg || 0),
-        0,
-    )
-
-    const actualProportionsLastWeek = Object.fromEntries(
-        Object.entries(lastWeekLoads).map(([muscle, sec]) => {
-            const load = sec.previousWeekAvg || 0
-            return [muscle, totalLastWeek > 0 ? load / totalLastWeek : 0]
-        }),
-    )
-
-    const imbalanceLastWeek = Object.entries(targetProportions).map(
-        ([muscle, target]) => ({
-            muscle,
-            diffPercent: (actualProportionsLastWeek[muscle] || 0) - target,
-        }),
-    )
-
-    const undertrainedLastWeek = imbalanceLastWeek
-        .filter((x) => x.diffPercent < -0.05)
-        .sort((a, b) => a.diffPercent - b.diffPercent)
-
-    const workoutTip = getLastWeekTip(undertrainedLastWeek)
-
-    // ---- This Week Tip ----
-    const imbalanceThisWeek = Object.entries(targetProportions).map(
-        ([muscle, target]) => ({
-            muscle,
-            diffPercent: (currentProportions[muscle] || 0) - target,
-        }),
-    )
-
-    const undertrainedThisWeek = imbalanceThisWeek
-        .filter((x) => x.diffPercent < -0.05)
-        .sort((a, b) => a.diffPercent - b.diffPercent)
-
-    const thisWeekTip = getThisWeekTip(undertrainedThisWeek)
-
-    // hide thisWeekTip for FIRST workout of the week
-    const totalThisWeek = Object.values(currentWeekLoads).reduce(
-        (sum, sec) => sum + (sec.currentWeekAvg || 0),
-        0,
-    )
-
-    const hideThisWeekTip = totalThisWeek === todayLoad
+    const { workoutTip, thisWeekTip, hideThisWeekTip } = computeTrainingTips({
+        weeklyAverages,
+        targetProportions,
+        currentProportions,
+        todayLoad,
+    })
 
     // -----------------------------------------------------------
     // WORKOUT CRUD

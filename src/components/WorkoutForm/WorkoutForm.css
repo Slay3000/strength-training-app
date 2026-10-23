@@ -346,3 +346,88 @@ li {
         border-radius: 10px;
     }
 }
+
+/* ================================================
+   USE LAST CHIP & HISTORY HINT
+================================================= */
+.exercise-history-hint {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 0.82rem;
+    color: var(--text-light);
+}
+
+.use-last-chip {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+}
+
+.use-last-chip:hover {
+    background: var(--border);
+    transform: translateY(-1px);
+}
+
+/* ================================================
+   QUICK STEPPERS ROW
+================================================= */
+.quick-steppers-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: -4px;
+    margin-bottom: 2px;
+}
+
+.stepper-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stepper-label {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    font-weight: 600;
+    margin-right: 2px;
+}
+
+.stepper-btn {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    min-width: 32px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s ease;
+}
+
+.stepper-btn:hover {
+    background: var(--border);
+    color: var(--primary);
+}
+
+.stepper-btn:active {
+    transform: scale(0.95);
+}
+

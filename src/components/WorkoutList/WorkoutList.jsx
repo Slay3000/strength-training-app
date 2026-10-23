@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { calculate1RM } from '../../helpers/workout'
+import TodaySummaryBar from './TodaySummaryBar'
+import ExerciseCard from './ExerciseCard'
 import './WorkoutList.css'
 
 export function groupWorkouts(workouts) {
@@ -8,68 +9,18 @@ export function groupWorkouts(workouts) {
         const date = w.ymd || new Date(w.created_at).toISOString().slice(0, 10)
         const type = w.exercises?.type || 'Unknown'
         const name = w.exercises?.name || 'Unknown Exercise'
-
         if (!grouped[date]) grouped[date] = {}
         if (!grouped[date][type]) grouped[date][type] = {}
         if (!grouped[date][type][name]) grouped[date][type][name] = []
-
         grouped[date][type][name].push(w)
     })
     return grouped
 }
 
-function computePRStats(workouts, exerciseId, todaySets) {
-    if (!exerciseId) {
-        return {
-            setPR: 0,
-            maxE1RM: 0,
-            exercisePR: 0,
-            todayLoad: 0,
-            progress: 0,
-            remaining: 0,
-        }
-    }
-
-    const all = workouts.filter((w) => w.exercise_id === exerciseId)
-
-    // --- Set PR = highest weight ever ---
-    const setPR = all.length ? Math.max(...all.map((w) => w.weight || 0)) : 0
-
-    // --- Max Estimated 1RM ever ---
-    const maxE1RM = all.length
-        ? Math.max(...all.map((w) => calculate1RM(w.weight || 0, w.reps || 0)))
-        : 0
-
-    // --- Exercise PR = best daily total load ---
-    const dailyTotals = {}
-    all.forEach((w) => {
-        const ymd = w.ymd || new Date(w.created_at).toISOString().slice(0, 10)
-        const load = (w.weight || 0) * (w.reps || 0)
-        dailyTotals[ymd] = (dailyTotals[ymd] || 0) + load
-    })
-
-    const exercisePR = Object.keys(dailyTotals).length
-        ? Math.max(...Object.values(dailyTotals))
-        : 0
-
-    // --- Today load ---
-    const todayLoad = todaySets.reduce(
-        (sum, s) => sum + (s.weight || 0) * (s.reps || 0),
-        0,
-    )
-
-    const progress =
-        exercisePR > 0 ? Math.min(100, (todayLoad / exercisePR) * 100) : 0
-
-    const remaining = exercisePR - todayLoad
-
-    return { setPR, maxE1RM, exercisePR, todayLoad, progress, remaining }
-}
 export default function WorkoutList({
     workouts,
     onDelete,
     onEdit,
-    prevStats, // kept as per Option B but unused
     hideDate = false,
     toGoToday,
     todayLoad,
@@ -79,6 +30,7 @@ export default function WorkoutList({
     const [collapsedTypes, setCollapsedTypes] = useState({})
     const [collapsedExercises, setCollapsedExercises] = useState({})
     const [openPR, setOpenPR] = useState({})
+
     const toggleDate = (date) =>
         setCollapsedDates((p) => ({ ...p, [date]: !p[date] }))
     const toggleType = (date, type) => {
@@ -97,8 +49,7 @@ export default function WorkoutList({
     const displayWorkouts = hideDate
         ? workouts.filter(
               (w) =>
-                  (w.ymd ||
-                      new Date(w.created_at).toISOString().slice(0, 10)) ===
+                  (w.ymd || new Date(w.created_at).toISOString().slice(0, 10)) ===
                   todayYMD,
           )
         : workouts
@@ -108,315 +59,72 @@ export default function WorkoutList({
     return (
         <div className="workout-list-container">
             {hideDate && (
-                <div className="today-summary">
-                    <div className="stats-block">
-                        <strong>Today Load:</strong>{' '}
-                        {todayLoad.toLocaleString()} kg
-                    </div>
-
-                    <div className="stats-block">
-                        <strong>Last Week Avg:</strong>{' '}
-                        {prevWeekAvg.toLocaleString()} kg
-                    </div>
-
-                    <div
-                        className={`stats-block ${
-                            toGoToday < 0
-                                ? 'positive'
-                                : toGoToday > 0
-                                  ? 'negative'
-                                  : 'neutral'
-                        }`}
-                    >
-                        <strong>To Go Today:</strong>{' '}
-                        {toGoToday > 0
-                            ? `${toGoToday.toLocaleString()} kg`
-                            : `+${Math.abs(toGoToday).toLocaleString()} kg`}
-                    </div>
-                </div>
+                <TodaySummaryBar
+                    todayLoad={todayLoad}
+                    prevWeekAvg={prevWeekAvg}
+                    toGoToday={toGoToday}
+                />
             )}
-            {Object.entries(grouped).map(([date, types]) => {
-                const showDate = !hideDate
-                return (
-                    <div key={date} className="workout-date-card">
-                        {showDate && (
-                            <div
-                                className="date-header"
-                                onClick={() => toggleDate(date)}
-                            >
-                                {date} {collapsedDates[date] ? '+' : '-'}
-                            </div>
-                        )}
 
-                        {!collapsedDates[date] &&
-                            Object.entries(types).map(([type, exercises]) => {
-                                const typeKey = `${date}-${type}`
-                                return (
-                                    <div key={typeKey} className="type-card">
-                                        <div
-                                            className="type-header"
-                                            onClick={() =>
-                                                toggleType(date, type)
-                                            }
-                                        >
-                                            {type}{' '}
-                                            {collapsedTypes[typeKey]
-                                                ? '+'
-                                                : '-'}
-                                        </div>
+            {Object.entries(grouped).map(([date, types]) => (
+                <div key={date} className="workout-date-card">
+                    {!hideDate && (
+                        <div
+                            className="date-header"
+                            onClick={() => toggleDate(date)}
+                        >
+                            {date} {collapsedDates[date] ? '+' : '-'}
+                        </div>
+                    )}
 
-                                        {!collapsedTypes[typeKey] &&
-                                            Object.entries(exercises).map(
-                                                ([name, sets]) => {
-                                                    const exKey = `${date}-${type}-${name}`
-
-                                                    const totalWeight =
-                                                        sets.reduce(
-                                                            (s, x) =>
-                                                                s +
-                                                                (x.weight ||
-                                                                    0) *
-                                                                    (x.reps ||
-                                                                        0),
-                                                            0,
-                                                        )
-                                                    const totalReps =
-                                                        sets.reduce(
-                                                            (s, x) =>
-                                                                s +
-                                                                (x.reps || 0),
-                                                            0,
-                                                        )
-                                                    const bestSet = sets.reduce(
-                                                        (m, x) =>
-                                                            Math.max(
-                                                                m,
-                                                                (x.weight ||
-                                                                    0) *
-                                                                    (x.reps ||
-                                                                        0),
-                                                            ),
-                                                        0,
-                                                    )
-
-                                                    const exerciseId =
-                                                        sets[0]?.exercise_id
-
-                                                    const {
-                                                        setPR,
-                                                        maxE1RM,
-                                                        exercisePR,
-                                                        todayLoad,
-                                                        progress,
-                                                        remaining,
-                                                    } = computePRStats(
-                                                        workouts,
-                                                        exerciseId,
-                                                        sets,
-                                                    )
-
-                                                    return (
-                                                        <div
-                                                            key={exKey}
-                                                            className="exercise-card"
-                                                        >
-                                                            <div
-                                                                className="exercise-header"
-                                                                onClick={() =>
-                                                                    toggleExercise(
-                                                                        date,
-                                                                        type,
-                                                                        name,
-                                                                    )
-                                                                }
-                                                            >
-                                                                {name}{' '}
-                                                                {collapsedExercises[
-                                                                    exKey
-                                                                ]
-                                                                    ? '+'
-                                                                    : '-'}
-                                                            </div>
-
-                                                            {!collapsedExercises[
-                                                                exKey
-                                                            ] && (
-                                                                <>
-                                                                    {sets.map(
-                                                                        (s) => (
-                                                                            <div
-                                                                                key={
-                                                                                    s.id
-                                                                                }
-                                                                                className="workout-item-card"
-                                                                            >
-                                                                                <span>
-                                                                                    {
-                                                                                        s.reps
-                                                                                    }{' '}
-                                                                                    reps
-                                                                                    @{' '}
-                                                                                    {
-                                                                                        s.weight
-                                                                                    }{' '}
-                                                                                    kg
-                                                                                </span>
-                                                                                {hideDate && (
-                                                                                    <div className="flex gap-2">
-                                                                                        <button
-                                                                                            onClick={() =>
-                                                                                                onEdit(
-                                                                                                    s,
-                                                                                                )
-                                                                                            }
-                                                                                            className="edit-button"
-                                                                                        >
-                                                                                            Edit
-                                                                                        </button>
-                                                                                        <button
-                                                                                            onClick={() =>
-                                                                                                onDelete(
-                                                                                                    s.id,
-                                                                                                )
-                                                                                            }
-                                                                                            className="delete-button"
-                                                                                        >
-                                                                                            Delete
-                                                                                        </button>
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        ),
-                                                                    )}
-                                                                    {/* Toggle PR Section */}
-                                                                    {hideDate && (
-                                                                        <button
-                                                                            className="pr-toggle-button"
-                                                                            onClick={() =>
-                                                                                setOpenPR(
-                                                                                    (
-                                                                                        prev,
-                                                                                    ) => ({
-                                                                                        ...prev,
-                                                                                        [exKey]:
-                                                                                            !prev[
-                                                                                                exKey
-                                                                                            ],
-                                                                                    }),
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            {openPR[
-                                                                                exKey
-                                                                            ]
-                                                                                ? 'Hide Stats'
-                                                                                : 'Show Stats'}
-                                                                        </button>
-                                                                    )}
-                                                                    {hideDate &&
-                                                                        openPR[
-                                                                            exKey
-                                                                        ] && (
-                                                                            <div className="pr-box">
-                                                                                <div className="stats-block">
-                                                                                    <strong>
-                                                                                        Exercise
-                                                                                        PR:
-                                                                                    </strong>{' '}
-                                                                                    {exercisePR.toLocaleString()}{' '}
-                                                                                    kg
-                                                                                </div>
-                                                                                <div className="stats-block">
-                                                                                    <strong>
-                                                                                        Set
-                                                                                        PR:
-                                                                                    </strong>{' '}
-                                                                                    {setPR.toLocaleString()}{' '}
-                                                                                    kg
-                                                                                </div>
-                                                                                <div className="stats-block">
-                                                                                    <strong>
-                                                                                        Today
-                                                                                        Load:
-                                                                                    </strong>{' '}
-                                                                                    {todayLoad.toLocaleString()}{' '}
-                                                                                    kg
-                                                                                </div>
-                                                                                <div
-                                                                                    className={`stats-block ${
-                                                                                        progress >
-                                                                                        100
-                                                                                            ? 'progress-new-pr'
-                                                                                            : progress >=
-                                                                                                90
-                                                                                              ? 'progress-excellent'
-                                                                                              : progress >=
-                                                                                                  70
-                                                                                                ? 'progress-good'
-                                                                                                : ''
-                                                                                    }`}
-                                                                                >
-                                                                                    <strong>
-                                                                                        Progress:
-                                                                                    </strong>{' '}
-                                                                                    {progress.toFixed(
-                                                                                        1,
-                                                                                    )}
-
-                                                                                    %
-                                                                                </div>
-                                                                                <div
-                                                                                    className={`stats-block ${
-                                                                                        remaining <=
-                                                                                        0
-                                                                                            ? 'remaining-hit-pr'
-                                                                                            : remaining <=
-                                                                                                exercisePR *
-                                                                                                    0.2
-                                                                                              ? 'remaining-close'
-                                                                                              : ''
-                                                                                    }`}
-                                                                                >
-                                                                                    <strong>
-                                                                                        To
-                                                                                        PR:
-                                                                                    </strong>{' '}
-                                                                                    {remaining.toLocaleString()}{' '}
-                                                                                    kg
-                                                                                </div>
-                                                                                <div className="stats-block">
-                                                                                    <strong>
-                                                                                        Total
-                                                                                        Reps:
-                                                                                    </strong>{' '}
-                                                                                    {
-                                                                                        totalReps
-                                                                                    }
-                                                                                </div>
-                                                                                <div className="stats-block">
-                                                                                    <strong>
-                                                                                        Best
-                                                                                        Set:
-                                                                                    </strong>{' '}
-                                                                                    {
-                                                                                        bestSet
-                                                                                    }{' '}
-                                                                                    kg·rep
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    )
-                                                },
-                                            )}
+                    {!collapsedDates[date] &&
+                        Object.entries(types).map(([type, exercises]) => {
+                            const typeKey = `${date}-${type}`
+                            return (
+                                <div key={typeKey} className="type-card">
+                                    <div
+                                        className="type-header"
+                                        onClick={() => toggleType(date, type)}
+                                    >
+                                        {type}{' '}
+                                        {collapsedTypes[typeKey] ? '+' : '-'}
                                     </div>
-                                )
-                            })}
-                    </div>
-                )
-            })}
+
+                                    {!collapsedTypes[typeKey] &&
+                                        Object.entries(exercises).map(
+                                            ([name, sets]) => {
+                                                const exKey = `${date}-${type}-${name}`
+                                                return (
+                                                    <ExerciseCard
+                                                        key={exKey}
+                                                        name={name}
+                                                        sets={sets}
+                                                        exKey={exKey}
+                                                        workouts={workouts}
+                                                        hideDate={hideDate}
+                                                        onEdit={onEdit}
+                                                        onDelete={onDelete}
+                                                        openPR={openPR}
+                                                        setOpenPR={setOpenPR}
+                                                        collapsed={
+                                                            collapsedExercises[exKey]
+                                                        }
+                                                        onToggle={() =>
+                                                            toggleExercise(
+                                                                date,
+                                                                type,
+                                                                name,
+                                                            )
+                                                        }
+                                                    />
+                                                )
+                                            },
+                                        )}
+                                </div>
+                            )
+                        })}
+                </div>
+            ))}
         </div>
     )
 }

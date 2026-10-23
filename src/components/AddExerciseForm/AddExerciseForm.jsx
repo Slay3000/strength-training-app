@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import {
+    fetchExerciseTypes,
+    insertExercise,
+} from '../../services/exercisesService'
 import './AddExerciseForm.css'
 
 export default function AddExerciseForm() {
@@ -20,10 +23,8 @@ export default function AddExerciseForm() {
 
     // Fetch existing types from exercises table
     useEffect(() => {
-        async function fetchTypes() {
-            const { data, error } = await supabase
-                .from('exercises')
-                .select('type')
+        async function loadTypes() {
+            const { data, error } = await fetchExerciseTypes()
             if (error) console.error(error)
             else {
                 const uniqueTypes = [
@@ -32,7 +33,7 @@ export default function AddExerciseForm() {
                 setTypes(uniqueTypes)
             }
         }
-        fetchTypes()
+        loadTypes()
     }, [])
 
     async function handleAddExercise() {
@@ -45,9 +46,10 @@ export default function AddExerciseForm() {
         const normalizedName = capitalizeWords(name)
         const normalizedType = capitalizeWords(type)
 
-        const { data, error } = await supabase
-            .from('exercises')
-            .insert([{ name: normalizedName, type: normalizedType }])
+        const { error } = await insertExercise({
+            name: normalizedName,
+            type: normalizedType,
+        })
 
         if (error) {
             if (error.code === '23505') {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { fetchExercises } from '../../services/exercisesService'
 import './Preferences.css'
 
 export default function Preferences({ hiddenExercises, setHiddenExercises }) {
@@ -8,16 +8,12 @@ export default function Preferences({ hiddenExercises, setHiddenExercises }) {
     const dropdownRef = useRef(null)
 
     useEffect(() => {
-        async function fetchExercises() {
-            const { data, error } = await supabase
-                .from('exercises')
-                .select('*')
-                .order('type', { ascending: true })
-                .order('name', { ascending: true })
+        async function loadExercises() {
+            const { data, error } = await fetchExercises()
             if (error) console.error(error)
             else setExercises(data || [])
         }
-        fetchExercises()
+        loadExercises()
     }, [])
 
     const toggleExercise = (id) => {
