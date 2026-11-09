@@ -81,12 +81,14 @@ export default function ExerciseCard({
                     {sets.map((s, idx) => {
                         const isWeightPR = weightPRSetIds.has(s.id)
                         const isE1RMPR = e1RMPRSetIds.has(s.id)
+                        // With newest set first, Set number counts down: sets.length - idx
+                        const setNumber = sets.length - idx
 
                         return (
                             <div key={s.id} className="workout-item-card">
                                 <div className="set-details-wrapper">
                                     <span className="set-number-badge">
-                                        Set {idx + 1}
+                                        Set {setNumber}
                                     </span>
                                     <span className="set-metrics">
                                         {s.reps} reps @ {s.weight} kg
@@ -151,6 +153,9 @@ export default function ExerciseCard({
                             remaining={remaining}
                             totalReps={totalReps}
                             bestSet={bestSet}
+                            exerciseName={name}
+                            exerciseId={exerciseId}
+                            workouts={workouts}
                         />
                     )}
                 </>

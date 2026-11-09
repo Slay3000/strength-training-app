@@ -54,6 +54,44 @@ describe('groupWorkouts', () => {
         const grouped = groupWorkouts(workouts)
         expect(grouped['2026-10-20']['Unknown']['Unknown Exercise']).toHaveLength(1)
     })
+
+    test('sorts sets within each exercise descending (newest first at top of list)', () => {
+        // Workouts in mixed or ascending order
+        const workoutsAsc = [
+            {
+                id: 1,
+                created_at: '2026-10-23T10:00:00Z',
+                exercises: { type: 'Chest', name: 'Bench Press' },
+                weight: 90,
+                reps: 8,
+            },
+            {
+                id: 2,
+                created_at: '2026-10-23T10:10:00Z',
+                exercises: { type: 'Chest', name: 'Bench Press' },
+                weight: 100,
+                reps: 6,
+            },
+            {
+                id: 3,
+                created_at: '2026-10-23T10:20:00Z',
+                exercises: { type: 'Chest', name: 'Bench Press' },
+                weight: 105,
+                reps: 4,
+            },
+        ]
+
+        const grouped = groupWorkouts(workoutsAsc)
+        const benchSets = grouped['2026-10-23']['Chest']['Bench Press']
+
+        // Newest set (id: 3) should be first
+        expect(benchSets[0].id).toBe(3)
+        expect(benchSets[0].weight).toBe(105)
+        expect(benchSets[1].id).toBe(2)
+        expect(benchSets[1].weight).toBe(100)
+        expect(benchSets[2].id).toBe(1)
+        expect(benchSets[2].weight).toBe(90)
+    })
 })
 
 describe('TodaySummaryBar Component', () => {

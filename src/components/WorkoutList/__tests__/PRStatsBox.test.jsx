@@ -47,5 +47,42 @@ describe('PRStatsBox Component', () => {
         expect(container.querySelector('.progress-new-pr')).toBeInTheDocument()
         expect(container.querySelector('.remaining-hit-pr')).toBeInTheDocument()
     })
+
+    test('renders 1RM graph when workouts history is provided', () => {
+        const workouts = [
+            {
+                id: 1,
+                exercise_id: 'ex-1',
+                created_at: '2026-10-01T10:00:00Z',
+                weight: 100,
+                reps: 10,
+            },
+            {
+                id: 2,
+                exercise_id: 'ex-1',
+                created_at: '2026-10-15T10:00:00Z',
+                weight: 110,
+                reps: 8,
+            },
+        ]
+
+        const { container } = render(
+            <PRStatsBox
+                exercisePR={2000}
+                setPR={110}
+                todayLoad={1500}
+                progress={75.0}
+                remaining={450}
+                totalReps={25}
+                bestSet={1200}
+                exerciseName="Bench Press"
+                exerciseId="ex-1"
+                workouts={workouts}
+            />,
+        )
+
+        expect(container.querySelector('.exercise-chart')).toBeInTheDocument()
+        expect(screen.getByTestId('mock-line-chart')).toBeInTheDocument()
+    })
 })
 

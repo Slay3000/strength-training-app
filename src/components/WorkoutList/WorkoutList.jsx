@@ -14,6 +14,21 @@ export function groupWorkouts(workouts) {
         if (!grouped[date][type][name]) grouped[date][type][name] = []
         grouped[date][type][name].push(w)
     })
+
+    // Sort sets descending (newest set first at top of list)
+    Object.values(grouped).forEach((types) => {
+        Object.values(types).forEach((exercises) => {
+            Object.values(exercises).forEach((sets) => {
+                sets.sort((a, b) => {
+                    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0
+                    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0
+                    if (timeA !== timeB) return timeB - timeA
+                    return (b.id || 0) - (a.id || 0)
+                })
+            })
+        })
+    })
+
     return grouped
 }
 

@@ -33,7 +33,11 @@ export const getLabelAndColorForScore = (score) => {
  * @param {number} dayCount - Number of days this section was trained this week.
  * @returns {object} { score, label, color, currentLoad, bestLoad, loadRatio }
  */
-export const computeSectionRecoveryScore = (current = 0, best = 0, dayCount = 0) => {
+export const computeSectionRecoveryScore = (
+    current = 0,
+    best = 0,
+    dayCount = 0,
+) => {
     if (current === 0 && best === 0) {
         return {
             score: 100,
@@ -147,7 +151,9 @@ export const computeRecoveryScores = (
     const totalCurrent = currentWeek?.totalLoad || 0
     const totalPrevious = previousWeek?.totalLoad || 0
     const totalDaysActive = thisWeekDays
-        ? thisWeekDays.filter((d) => d?.getTotalWeight && d.getTotalWeight() > 0).length
+        ? thisWeekDays.filter(
+              (d) => d?.getTotalWeight && d.getTotalWeight() > 0,
+          ).length
         : 0
 
     const overallBenchmark =

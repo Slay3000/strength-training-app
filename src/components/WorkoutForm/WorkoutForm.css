@@ -395,11 +395,11 @@ li {
 .stepper-group {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 
 .stepper-label {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     color: var(--text-light);
     font-weight: 600;
     margin-right: 2px;
@@ -408,17 +408,19 @@ li {
 .stepper-btn {
     background: var(--bg-soft);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 3px 8px;
-    font-size: 0.78rem;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 0.82rem;
     font-weight: 700;
     color: var(--text);
     cursor: pointer;
-    min-width: 32px;
-    height: 28px;
+    min-width: 38px;
+    height: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
     transition: all 0.12s ease;
 }
 
@@ -428,6 +430,39 @@ li {
 }
 
 .stepper-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.93);
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+@media (max-width: 760px) {
+    .quick-steppers-row {
+        gap: 10px;
+        margin-top: 2px;
+        margin-bottom: 4px;
+    }
+
+    .stepper-group {
+        flex: 1 1 calc(50% - 6px);
+        background: var(--bg-card);
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        box-sizing: border-box;
+        justify-content: space-between;
+    }
+
+    .stepper-label {
+        font-size: 0.78rem;
+    }
+
+    .stepper-btn {
+        flex: 1 1 auto;
+        min-width: 34px;
+        height: 34px;
+        font-size: 0.85rem;
+        padding: 4px 6px;
+    }
 }
 
