@@ -409,6 +409,28 @@ body {
     }
 }
 
+/* Mobile global optimizations */
+@media (max-width: 600px) {
+    .app-container {
+        padding: 0.5rem 0.4rem 2rem;
+    }
+
+    .tab-content {
+        padding: 0.9rem 0.65rem;
+        border-radius: 10px;
+    }
+
+    /* Prevent iOS auto-zoom on input focus */
+    input, select, textarea {
+        font-size: 16px;
+    }
+
+    /* Mobile button tap feedback */
+    button {
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+
 /* ----------------------------------------------
    MISC
 ------------------------------------------------*/

@@ -55,11 +55,22 @@
 
 /* Mobile layout */
 @media (max-width: 760px) {
+    .pr-box {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 10px;
+        margin: 12px 0;
+    }
+
     .pr-box .stats-block {
-        flex: 1 1 100%;
-        width: 100%;
-        padding: 12px 6px;
-        font-size: 16px;
+        padding: 6px 4px;
+        font-size: 14px;
+        white-space: normal;
+    }
+
+    .pr-box .exercise-chart {
+        grid-column: 1 / -1;
     }
 }
 
@@ -280,5 +291,29 @@
     opacity: 0.75;
     /* keep the canvas from stretching the flex row */
     line-height: 0;
+}
+
+@media (max-width: 600px) {
+    .workout-item-card {
+        padding: 0.65rem 0.6rem;
+    }
+
+    .delete-button,
+    .edit-button {
+        padding: 4px 6px;
+        font-size: 0.85rem;
+    }
+
+    .today-summary {
+        padding: 10px 12px;
+    }
+
+    .today-summary-stats {
+        gap: 8px;
+    }
+
+    .today-summary-stats .stats-block {
+        font-size: 13.5px;
+    }
 }
 

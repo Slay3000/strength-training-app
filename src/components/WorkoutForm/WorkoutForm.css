@@ -274,13 +274,13 @@ video {
    LISTS / CARDS
 ------------------------------------------------------------------- */
 
-ul {
+.scanner-list {
     list-style: none;
     padding-left: 0;
     margin: 0;
 }
 
-li {
+.scanner-list li {
     width: 100%;
     max-width: 100%;
     padding: 12px;
@@ -301,7 +301,7 @@ li {
         width: 100%;
     }
 
-    button {
+    .form-row button {
         width: 100%;
     }
 

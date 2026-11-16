@@ -169,3 +169,22 @@
     color: #999;
     font-style: italic;
 }
+
+@media (max-width: 600px) {
+    .suggestions-page {
+        padding: 0.25rem 0;
+    }
+
+    .suggestions-title {
+        font-size: 1.2rem;
+    }
+
+    .suggestion-card {
+        padding: 0.85rem 0.85rem;
+    }
+
+    .suggestion-chip {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}

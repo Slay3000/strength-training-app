@@ -11,7 +11,10 @@ export default function TopMenu({ tab, setTab }) {
 
     return (
         <header className="topmenu">
-            <div className="topmenu-brand">Workout App</div>
+            <div className="topmenu-brand" onClick={() => handleSelect('current')}>
+                <span className="topmenu-brand-icon" role="img" aria-label="strength">🏋️</span>
+                <span>Workout App</span>
+            </div>
 
             {/* Burger icon */}
             <button
