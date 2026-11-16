@@ -214,6 +214,51 @@ describe('computeSectionGaps', () => {
         expect(backGap.gap).toBe(800)
         expect(backGap.percentOfAvg).toBe(20)
     })
+
+    test('sorts sections by percentage of execution ascending (lowest completion first)', () => {
+        const now = new Date()
+        const dayOfWeek = now.getDay()
+        const diffToMonday = (dayOfWeek + 6) % 7
+        const monday = new Date(now)
+        monday.setDate(now.getDate() - diffToMonday)
+        monday.setHours(12, 0, 0, 0)
+
+        const twoWeeksAgo = new Date(monday)
+        twoWeeksAgo.setDate(monday.getDate() - 14)
+
+        const workouts = [
+            // History: Chest avg = 1000, Legs avg = 1000
+            {
+                created_at: twoWeeksAgo.toISOString(),
+                exercises: { type: 'Chest' },
+                weight: 100,
+                reps: 40,
+            },
+            {
+                created_at: twoWeeksAgo.toISOString(),
+                exercises: { type: 'Legs' },
+                weight: 100,
+                reps: 40,
+            },
+            // Current week: Chest at 50% (500kg), Legs at 10% (100kg)
+            {
+                created_at: monday.toISOString(),
+                exercises: { type: 'Chest' },
+                weight: 100,
+                reps: 5,
+            },
+            {
+                created_at: monday.toISOString(),
+                exercises: { type: 'Legs' },
+                weight: 100,
+                reps: 1,
+            },
+        ]
+
+        const gaps = computeSectionGaps(workouts)
+        expect(gaps[0].section).toBe('Legs') // 10% comes first
+        expect(gaps[1].section).toBe('Chest') // 50% comes second
+    })
 })
 
 

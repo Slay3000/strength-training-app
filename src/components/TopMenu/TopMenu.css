@@ -66,8 +66,9 @@
 }
 
 .menu.open {
-    max-height: 380px;
+    max-height: 520px;
     opacity: 1;
+    overflow-y: auto;
 }
 
 .menu button {

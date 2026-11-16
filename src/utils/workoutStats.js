@@ -84,8 +84,13 @@ export function computeSectionGaps(allWorkouts = []) {
         results.push({ section, currentLoad: Math.round(curr), avgLoad: Math.round(avgLoad), gap: Math.round(gap), percentOfAvg })
     })
 
-    // Sort by gap descending (most lagging first)
-    return results.sort((a, b) => b.gap - a.gap)
+    // Sort by percentage of execution ascending (lowest completion first), then by gap descending
+    return results.sort((a, b) => {
+        if (a.percentOfAvg !== b.percentOfAvg) {
+            return a.percentOfAvg - b.percentOfAvg
+        }
+        return b.gap - a.gap
+    })
 }
 
 /**

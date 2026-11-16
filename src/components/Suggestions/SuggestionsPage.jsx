@@ -42,15 +42,66 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
         }
     })
 
+    function formatTimeAgo(dateStr) {
+        if (!dateStr) return 'Never'
+        const now = new Date()
+        const then = new Date(dateStr)
+        const diffDays = Math.max(0, Math.floor((now - then) / (1000 * 60 * 60 * 24)))
+        if (diffDays === 0) return 'Today'
+        if (diffDays === 1) return 'Yesterday'
+        if (diffDays < 7) return `${diffDays}d ago`
+        if (diffDays < 30) {
+            const weeks = Math.floor(diffDays / 7)
+            return `${weeks}w ago`
+        }
+        const months = Math.floor(diffDays / 30)
+        return `${months}mo ago`
+    }
+
     function getSuggestionsForSection(section) {
         const sectionExercises = exercises.filter((e) => e.type === section)
-        const sorted = [...sectionExercises].sort((a, b) => {
-            const dateA = recentExerciseDate[a.id] || ''
-            const dateB = recentExerciseDate[b.id] || ''
-            if (dateB !== dateA) return dateB > dateA ? 1 : -1
-            return a.name.localeCompare(b.name)
+        const now = new Date()
+
+        const withRecency = sectionExercises.map((e) => {
+            const dateStr = recentExerciseDate[e.id] || null
+            const daysAgo = dateStr
+                ? Math.floor((now - new Date(dateStr)) / (1000 * 60 * 60 * 24))
+                : Infinity
+            return {
+                ...e,
+                dateStr,
+                daysAgo,
+                timeAgo: formatTimeAgo(dateStr),
+            }
         })
-        return sorted.slice(0, 3)
+
+        // Recent favorites: trained within last 14 days, sorted most recent first
+        const recent = withRecency
+            .filter((e) => e.daysAgo <= 14)
+            .sort((a, b) => a.daysAgo - b.daysAgo)
+            .slice(0, 3)
+
+        // Neglected: >14 days ago or never logged, sorted oldest / never first
+        const neglected = withRecency
+            .filter((e) => e.daysAgo > 14)
+            .sort((a, b) => {
+                if (a.daysAgo !== b.daysAgo) return b.daysAgo - a.daysAgo
+                return a.name.localeCompare(b.name)
+            })
+            .slice(0, 3)
+
+        // Fallback: if recent is empty (e.g. haven't trained this section in 2+ weeks),
+        // take the most recent logged exercise for recent if one exists
+        if (recent.length === 0 && withRecency.length > 0) {
+            const logged = withRecency
+                .filter((e) => e.daysAgo !== Infinity)
+                .sort((a, b) => a.daysAgo - b.daysAgo)
+            if (logged.length > 0) {
+                recent.push(logged[0])
+            }
+        }
+
+        return { recent, neglected, allEmpty: withRecency.length === 0 }
     }
 
     return (
@@ -87,22 +138,56 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
                                 <span className="suggestion-bar-label">{percentOfAvg}% of avg</span>
                             </div>
 
-                            {suggestions.length > 0 ? (
-                                <div className="suggestion-chips">
-                                    {suggestions.map((ex) => (
-                                        <button
-                                            key={ex.id}
-                                            className="suggestion-chip"
-                                            onClick={() => onSelectExercise && onSelectExercise(ex.name)}
-                                        >
-                                            {ex.name}
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : (
+                            {suggestions.allEmpty ? (
                                 <p className="suggestion-no-exercises">
                                     No exercises found for this section.
                                 </p>
+                            ) : (
+                                <div className="suggestion-subsections">
+                                    {suggestions.recent.length > 0 && (
+                                        <div className="suggestion-subgroup">
+                                            <div className="suggestion-subgroup-title">
+                                                🔥 Recent ({suggestions.recent.length}):
+                                            </div>
+                                            <div className="suggestion-chips">
+                                                {suggestions.recent.map((ex) => (
+                                                    <button
+                                                        key={ex.id}
+                                                        className="suggestion-chip"
+                                                        onClick={() => onSelectExercise && onSelectExercise(ex.name)}
+                                                    >
+                                                        {ex.name}
+                                                        {ex.daysAgo > 0 && ex.daysAgo !== Infinity && (
+                                                            <span className="chip-time-badge">{ex.timeAgo}</span>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {suggestions.neglected.length > 0 && (
+                                        <div className="suggestion-subgroup">
+                                            <div className="suggestion-subgroup-title">
+                                                ⏳ Haven't done in a while ({suggestions.neglected.length}):
+                                            </div>
+                                            <div className="suggestion-chips">
+                                                {suggestions.neglected.map((ex) => (
+                                                    <button
+                                                        key={ex.id}
+                                                        className="suggestion-chip suggestion-chip-neglected"
+                                                        onClick={() => onSelectExercise && onSelectExercise(ex.name)}
+                                                    >
+                                                        {ex.name}
+                                                        <span className="chip-time-badge chip-time-neglected">
+                                                            {ex.timeAgo}
+                                                        </span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     )

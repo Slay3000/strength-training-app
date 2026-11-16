@@ -292,7 +292,7 @@ export default function App() {
 
                 {tab === 'add-exercise' && <AddExerciseForm />}
 
-                {tab === 'suggest' && (
+                {(tab === 'suggestions' || tab === 'suggest') && (
                     <SuggestionsPage
                         workouts={workouts}
                         onSelectExercise={(exerciseName) => {

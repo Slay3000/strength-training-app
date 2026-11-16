@@ -6,6 +6,7 @@ describe('TopMenu Component', () => {
         render(<TopMenu tab="current" setTab={jest.fn()} />)
         expect(screen.getByText('Workout App')).toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Current' })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Suggestions' })).toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'History' })).toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Summary' })).toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Preferences' })).toBeInTheDocument()
@@ -31,6 +32,9 @@ describe('TopMenu Component', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'History' }))
         expect(setTab).toHaveBeenCalledWith('history')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Suggestions' }))
+        expect(setTab).toHaveBeenCalledWith('suggestions')
     })
 
     test('toggles mobile menu open state when burger icon is clicked', () => {

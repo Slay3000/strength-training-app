@@ -34,6 +34,13 @@ export default function TopMenu({ tab, setTab }) {
                 </button>
 
                 <button
+                    className={tab === 'suggestions' || tab === 'suggest' ? 'active' : ''}
+                    onClick={() => handleSelect('suggestions')}
+                >
+                    Suggestions
+                </button>
+
+                <button
                     className={tab === 'history' ? 'active' : ''}
                     onClick={() => handleSelect('history')}
                 >
@@ -66,13 +73,6 @@ export default function TopMenu({ tab, setTab }) {
                     onClick={() => handleSelect('add-exercise')}
                 >
                     Add Exercise
-                </button>
-
-                <button
-                    className={tab === 'suggest' ? 'active' : ''}
-                    onClick={() => handleSelect('suggest')}
-                >
-                    Suggest
                 </button>
             </nav>
         </header>

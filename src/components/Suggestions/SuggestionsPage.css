@@ -96,19 +96,34 @@
 }
 
 /* Exercise chips */
+.suggestion-subsections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.suggestion-subgroup-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 0.4rem;
+}
+
 .suggestion-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 0.25rem;
 }
 
 .suggestion-chip {
+    display: inline-flex;
+    align-items: center;
     background: #e8f4fd;
     color: #0070c0;
     border: 1px solid #90caf9;
     border-radius: 999px;
-    padding: 0.3rem 0.85rem;
+    padding: 0.35rem 0.85rem;
     font-size: 0.82rem;
     font-weight: 500;
     cursor: pointer;
@@ -117,11 +132,36 @@
 
 .suggestion-chip:hover {
     background: #bbdefb;
-    transform: scale(1.03);
+    transform: scale(1.02);
 }
 
 .suggestion-chip:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
+}
+
+.chip-time-badge {
+    margin-left: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.08);
+    color: inherit;
+}
+
+.suggestion-chip-neglected {
+    background: #fff8e1;
+    color: #b78103;
+    border-color: #ffe082;
+}
+
+.suggestion-chip-neglected:hover {
+    background: #ffecb3;
+}
+
+.chip-time-neglected {
+    background: #ffe082;
+    color: #6d4c00;
 }
 
 .suggestion-no-exercises {
