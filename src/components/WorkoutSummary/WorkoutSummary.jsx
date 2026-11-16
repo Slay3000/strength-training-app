@@ -16,6 +16,7 @@ import { computeRecoveryScores } from '../../utils/recoveryScore'
 import { weeklyBarOptions, sectionBarOptions } from '../../utils/chartOptions'
 
 import RecoveryScoreSection from './RecoveryScoreSection'
+import ACWRSection from './ACWRSection'
 import OverallSummarySection from './OverallSummarySection'
 import ExerciseChartCard from './ExerciseChartCard'
 import './WorkoutSummary.css'
@@ -203,6 +204,12 @@ export default function WorkoutSummary({ workouts }) {
         <div className="summary-container">
             <RecoveryScoreSection
                 recoveryStats={recoveryStats}
+                openSections={openSections}
+                toggleSection={toggleSection}
+            />
+
+            <ACWRSection
+                workouts={workouts}
                 openSections={openSections}
                 toggleSection={toggleSection}
             />

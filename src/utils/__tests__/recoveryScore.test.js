@@ -2,6 +2,7 @@ import {
     computeRecoveryScores,
     computeSectionRecoveryScore,
     getLabelAndColorForScore,
+    computeACWR,
 } from '../recoveryScore'
 import { WorkoutDay, WorkoutWeek } from '../../models/workoutModels'
 
@@ -238,4 +239,40 @@ describe('computeRecoveryScores', () => {
         )
     })
 })
+
+describe('computeACWR', () => {
+    test('returns null acwr when no workouts or chronic is 0', () => {
+        const result = computeACWR([])
+        expect(result.overall).toEqual({ acwr: null, zone: null, label: '—' })
+        expect(result.sections).toEqual({})
+    })
+
+    test('computes ACWR and classifies into zones', () => {
+        const now = new Date()
+        const daysAgo = (days) =>
+            new Date(now.getTime() - days * 86400000).toISOString()
+
+        const workouts = [
+            {
+                created_at: daysAgo(2),
+                weight: 100,
+                reps: 10,
+                exercises: { type: 'Chest' },
+            },
+            {
+                created_at: daysAgo(15),
+                weight: 100,
+                reps: 10,
+                exercises: { type: 'Chest' },
+            },
+        ]
+
+        const result = computeACWR(workouts)
+        expect(result.overall.acwr).toBe(1)
+        expect(result.overall.zone).toBe('optimal')
+        expect(result.sections.Chest.acwr).toBe(1)
+        expect(result.sections.Chest.label).toContain('Optimal')
+    })
+})
+
 

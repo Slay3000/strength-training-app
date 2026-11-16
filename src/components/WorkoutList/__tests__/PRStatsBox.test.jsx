@@ -84,5 +84,37 @@ describe('PRStatsBox Component', () => {
         expect(container.querySelector('.exercise-chart')).toBeInTheDocument()
         expect(screen.getByTestId('mock-line-chart')).toBeInTheDocument()
     })
+
+    test('renders prompt when bodyweight is not set', () => {
+        render(
+            <PRStatsBox
+                exercisePR={2000}
+                setPR={120}
+                todayLoad={1500}
+                progress={75.0}
+                remaining={450}
+                totalReps={25}
+                bestSet={1200}
+            />,
+        )
+        expect(screen.getByText(/Set bodyweight in Preferences for Wilks score/i)).toBeInTheDocument()
+    })
+
+    test('renders Wilks score when bodyweight and setPR are provided', () => {
+        render(
+            <PRStatsBox
+                exercisePR={2000}
+                setPR={150}
+                todayLoad={1500}
+                progress={75.0}
+                remaining={450}
+                totalReps={25}
+                bestSet={1200}
+                bodyweight={80}
+            />,
+        )
+        expect(screen.getByText(/Wilks Score:/i)).toBeInTheDocument()
+        expect(screen.getByText('102.4')).toBeInTheDocument()
+    })
 })
 

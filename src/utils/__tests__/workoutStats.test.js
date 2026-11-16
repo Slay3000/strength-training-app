@@ -3,6 +3,8 @@ import {
     computeWeeklySectionAverages,
     computePrevStatsBySectionAndExercise,
     getPRSetIds,
+    getExerciseVolumeTrend,
+    computeSectionGaps,
 } from '../workoutStats'
 
 describe('getExerciseHistoryStats', () => {
@@ -144,5 +146,75 @@ describe('getPRSetIds (badge bug prevention)', () => {
         expect(e1RMPRSetIds.size).toBe(0)
     })
 })
+
+describe('getExerciseVolumeTrend', () => {
+    test('returns empty array when workouts is empty or invalid', () => {
+        expect(getExerciseVolumeTrend([], 'ex-1')).toEqual([])
+        expect(getExerciseVolumeTrend(null, 'ex-1')).toEqual([])
+        expect(getExerciseVolumeTrend([{ exercise_id: 'ex-1' }], null)).toEqual([])
+    })
+
+    test('aggregates volume per day and returns last N sessions', () => {
+        const workouts = [
+            { exercise_id: 'ex-1', ymd: '2026-11-01', weight: 50, reps: 10 },
+            { exercise_id: 'ex-1', ymd: '2026-11-01', weight: 50, reps: 10 }, // 1000 total on 11-01
+            { exercise_id: 'ex-1', ymd: '2026-11-03', weight: 60, reps: 10 }, // 600 total on 11-03
+            { exercise_id: 'ex-2', ymd: '2026-11-04', weight: 100, reps: 5 }, // diff exercise
+            { exercise_id: 'ex-1', ymd: '2026-11-05', weight: 70, reps: 10 }, // 700 total on 11-05
+        ]
+
+        const trend = getExerciseVolumeTrend(workouts, 'ex-1', 2)
+        expect(trend).toEqual([600, 700])
+
+        const fullTrend = getExerciseVolumeTrend(workouts, 'ex-1', 7)
+        expect(fullTrend).toEqual([1000, 600, 700])
+    })
+})
+
+describe('computeSectionGaps', () => {
+    test('returns empty array when workouts is empty', () => {
+        expect(computeSectionGaps([])).toEqual([])
+        expect(computeSectionGaps(null)).toEqual([])
+    })
+
+    test('computes gaps comparing current week to rolling 4-week history', () => {
+        const now = new Date()
+        const dayOfWeek = now.getDay()
+        const diffToMonday = (dayOfWeek + 6) % 7
+        const monday = new Date(now)
+        monday.setDate(now.getDate() - diffToMonday)
+        monday.setHours(12, 0, 0, 0)
+
+        const twoWeeksAgo = new Date(monday)
+        twoWeeksAgo.setDate(monday.getDate() - 14)
+
+        const workouts = [
+            // Historical week
+            {
+                created_at: twoWeeksAgo.toISOString(),
+                exercises: { type: 'Back' },
+                weight: 100,
+                reps: 40, // 4000 volume -> average over 4 weeks = 1000
+            },
+            // Current week (lagging)
+            {
+                created_at: monday.toISOString(),
+                exercises: { type: 'Back' },
+                weight: 100,
+                reps: 2, // 200 volume
+            },
+        ]
+
+        const gaps = computeSectionGaps(workouts)
+        expect(gaps.length).toBeGreaterThan(0)
+        const backGap = gaps.find((g) => g.section === 'Back')
+        expect(backGap).toBeDefined()
+        expect(backGap.avgLoad).toBe(1000)
+        expect(backGap.currentLoad).toBe(200)
+        expect(backGap.gap).toBe(800)
+        expect(backGap.percentOfAvg).toBe(20)
+    })
+})
+
 
 

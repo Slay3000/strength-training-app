@@ -67,6 +67,13 @@ export default function TopMenu({ tab, setTab }) {
                 >
                     Add Exercise
                 </button>
+
+                <button
+                    className={tab === 'suggest' ? 'active' : ''}
+                    onClick={() => handleSelect('suggest')}
+                >
+                    Suggest
+                </button>
             </nav>
         </header>
     )

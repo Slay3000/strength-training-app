@@ -1,0 +1,131 @@
+/* SuggestionsPage styles */
+
+.suggestions-page {
+    padding: 1rem;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.suggestions-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.suggestions-subtitle {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 1.25rem;
+}
+
+.suggestions-loading,
+.suggestions-empty {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #555;
+    font-size: 1rem;
+}
+
+/* Cards */
+.suggestions-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.suggestion-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.suggestion-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.suggestion-section-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.suggestion-gap-badge {
+    background: #fff3cd;
+    color: #856404;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid #ffc107;
+}
+
+/* Volume row */
+.suggestion-volume-row {
+    font-size: 0.85rem;
+    color: #444;
+    margin-bottom: 0.6rem;
+}
+
+/* Progress bar */
+.suggestion-bar-wrap {
+    position: relative;
+    height: 10px;
+    background: #eee;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 0.4rem;
+}
+
+.suggestion-bar-fill {
+    height: 100%;
+    background: #4caf50;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.suggestion-bar-label {
+    display: block;
+    text-align: right;
+    font-size: 0.75rem;
+    color: #777;
+    margin-bottom: 0.75rem;
+}
+
+/* Exercise chips */
+.suggestion-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.suggestion-chip {
+    background: #e8f4fd;
+    color: #0070c0;
+    border: 1px solid #90caf9;
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.suggestion-chip:hover {
+    background: #bbdefb;
+    transform: scale(1.03);
+}
+
+.suggestion-chip:active {
+    transform: scale(0.97);
+}
+
+.suggestion-no-exercises {
+    font-size: 0.82rem;
+    color: #999;
+    font-style: italic;
+}

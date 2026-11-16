@@ -2,10 +2,14 @@ import { useEffect, useState, useRef } from 'react'
 import { fetchExercises } from '../../services/exercisesService'
 import './Preferences.css'
 
-export default function Preferences({ hiddenExercises, setHiddenExercises }) {
+export default function Preferences({ hiddenExercises, setHiddenExercises, onBodyweightChange }) {
     const [exercises, setExercises] = useState([])
     const [openType, setOpenType] = useState(null) // which type's dropdown is open
     const dropdownRef = useRef(null)
+
+    const [bodyweight, setBodyweight] = useState(
+        () => localStorage.getItem('bodyweight_kg') || '',
+    )
 
     useEffect(() => {
         async function loadExercises() {
@@ -46,8 +50,35 @@ export default function Preferences({ hiddenExercises, setHiddenExercises }) {
             document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
+    function handleBodyweightChange(e) {
+        const val = e.target.value
+        setBodyweight(val)
+        if (val) {
+            localStorage.setItem('bodyweight_kg', val)
+        } else {
+            localStorage.removeItem('bodyweight_kg')
+        }
+        if (onBodyweightChange) onBodyweightChange(val)
+    }
+
     return (
         <div className="preferences-container">
+            <div className="preference-row" style={{ marginBottom: '16px' }}>
+                <label htmlFor="bodyweight-input" style={{ fontWeight: 600, marginRight: '8px' }}>
+                    Bodyweight (kg):
+                </label>
+                <input
+                    id="bodyweight-input"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={bodyweight}
+                    onChange={handleBodyweightChange}
+                    placeholder="e.g. 80"
+                    style={{ width: '100px' }}
+                />
+            </div>
+
             {Object.entries(grouped).map(([type, exs]) => (
                 <div
                     key={type}

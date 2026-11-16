@@ -1,5 +1,6 @@
-import { getPRSetIds } from '../../utils/workoutStats'
+import { getPRSetIds, getExerciseVolumeTrend } from '../../utils/workoutStats'
 import PRStatsBox from './PRStatsBox'
+import { Line } from 'react-chartjs-2'
 
 function computePRStats(workouts, exerciseId, todaySets) {
     if (!exerciseId) {
@@ -53,6 +54,7 @@ export default function ExerciseCard({
     setOpenPR,
     collapsed,
     onToggle,
+    bodyweight,
 }) {
     const totalReps = sets.reduce((s, x) => s + (x.reps || 0), 0)
     const bestSet = sets.reduce(
@@ -62,6 +64,34 @@ export default function ExerciseCard({
     const exerciseId = sets[0]?.exercise_id
     const { setPR, exercisePR, todayLoad, progress, remaining } =
         computePRStats(workouts, exerciseId, sets)
+
+    // Volume trend for sparkline (last 7 sessions)
+    const volumeTrend = getExerciseVolumeTrend(workouts, exerciseId, 7)
+    const sparklineData = {
+        labels: volumeTrend.map((_, i) => i),
+        datasets: [
+            {
+                data: volumeTrend,
+                borderColor: '#3b82f6',
+                borderWidth: 1.5,
+                pointRadius: 0,
+                tension: 0.3,
+                fill: false,
+            },
+        ],
+    }
+    const sparklineOptions = {
+        responsive: false,
+        animation: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false },
+        },
+        scales: {
+            x: { display: false },
+            y: { display: false },
+        },
+    }
 
     // Identify which set (if any) achieved a PR over prior workouts
     const todaySetIds = new Set(sets.map((s) => s.id))
@@ -73,7 +103,18 @@ export default function ExerciseCard({
     return (
         <div className="exercise-card">
             <div className="exercise-header" onClick={onToggle}>
-                {name} {collapsed ? '+' : '-'}
+                <span className="exercise-header-name">{name}</span>
+                {volumeTrend.length >= 2 && (
+                    <span className="exercise-sparkline">
+                        <Line
+                            data={sparklineData}
+                            options={sparklineOptions}
+                            width={60}
+                            height={28}
+                        />
+                    </span>
+                )}
+                <span className="exercise-header-toggle">{collapsed ? '+' : '-'}</span>
             </div>
 
             {!collapsed && (
@@ -156,6 +197,7 @@ export default function ExerciseCard({
                             exerciseName={name}
                             exerciseId={exerciseId}
                             workouts={workouts}
+                            bodyweight={bodyweight}
                         />
                     )}
                 </>

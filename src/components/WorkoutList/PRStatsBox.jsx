@@ -1,5 +1,5 @@
 import { Line } from 'react-chartjs-2'
-import { calculate1RM } from '../../utils/fitnessCalc'
+import { calculate1RM, calculateWilks } from '../../utils/fitnessCalc'
 import { exerciseLineOptions } from '../../utils/chartOptions'
 
 // Collapsible box showing PR stats and 1RM progress graph for a single exercise
@@ -14,6 +14,7 @@ export default function PRStatsBox({
     exerciseName,
     exerciseId,
     workouts = [],
+    bodyweight,
 }) {
     // Build daily estimated 1RM history for this exercise
     const dailyE1RM = {}
@@ -52,6 +53,8 @@ export default function PRStatsBox({
             },
         ],
     }
+
+    const wilksScore = bodyweight && setPR ? calculateWilks(bodyweight, setPR) : null
 
     return (
         <div className="pr-box">
@@ -93,6 +96,18 @@ export default function PRStatsBox({
             </div>
             <div className="stats-block">
                 <strong>Best Set:</strong> {bestSet} kg·rep
+            </div>
+
+            <div className="stats-block">
+                {wilksScore !== null ? (
+                    <>
+                        <strong>Wilks Score:</strong> {wilksScore.toFixed(1)}
+                    </>
+                ) : (
+                    <span style={{ color: 'var(--muted, #888)', fontStyle: 'italic' }}>
+                        Set bodyweight in Preferences for Wilks score
+                    </span>
+                )}
             </div>
 
             {/* 1PR / Est. 1RM Graph */}

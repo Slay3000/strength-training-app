@@ -1,4 +1,26 @@
-import { calculate1RM } from '../fitnessCalc'
+import { calculate1RM, calculateWilks } from '../fitnessCalc'
+
+describe('calculateWilks', () => {
+    test('returns 0 for non-positive bodyweight or lifted weight', () => {
+        expect(calculateWilks(0, 100)).toBe(0)
+        expect(calculateWilks(80, 0)).toBe(0)
+        expect(calculateWilks(-80, 100)).toBe(0)
+        expect(calculateWilks(80, -100)).toBe(0)
+        expect(calculateWilks(null, undefined)).toBe(0)
+    })
+
+    test('computes Wilks2 score for male lifter', () => {
+        expect(calculateWilks(80, 150, true)).toBe(102.4)
+    })
+
+    test('computes Wilks2 score for female lifter', () => {
+        expect(calculateWilks(60, 100, false)).toBe(111.5)
+    })
+
+    test('handles numeric strings', () => {
+        expect(calculateWilks('80', '150')).toBe(102.4)
+    })
+})
 
 describe('calculate1RM', () => {
     test('returns 0 for non-positive weight or reps', () => {

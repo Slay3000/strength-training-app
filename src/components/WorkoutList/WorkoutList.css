@@ -251,3 +251,34 @@
     }
 }
 
+/* ================================================
+   EXERCISE HEADER & SPARKLINE
+================================================= */
+.exercise-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.exercise-header-name {
+    flex: 1 1 auto;
+    font-weight: 600;
+}
+
+.exercise-header-toggle {
+    flex: 0 0 auto;
+    font-size: 1rem;
+    color: var(--text-light, #888);
+}
+
+.exercise-sparkline {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    opacity: 0.75;
+    /* keep the canvas from stretching the flex row */
+    line-height: 0;
+}
+

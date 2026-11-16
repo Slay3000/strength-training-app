@@ -2,6 +2,124 @@
 import { WorkoutDay, WorkoutWeek, WorkoutMonth } from '../models/workoutModels'
 import { calculate1RM } from './fitnessCalc'
 
+/**
+ * Computes per-section volume gaps between current week and 4-week rolling average.
+ *
+ * @param {Array} allWorkouts - full workouts array
+ * @returns {Array} [{ section, currentLoad, avgLoad, gap, percentOfAvg }] sorted by gap desc
+ */
+export function computeSectionGaps(allWorkouts = []) {
+    if (!Array.isArray(allWorkouts) || allWorkouts.length === 0) return []
+
+    const totalWeight = (sets) =>
+        sets.reduce((sum, s) => sum + (Number(s.weight) || 0) * (Number(s.reps) || 0), 0)
+
+    const today = new Date()
+    const dayOfWeek = today.getDay()
+    const diffToMonday = (dayOfWeek + 6) % 7
+    const currentWeekStart = new Date(today)
+    currentWeekStart.setDate(today.getDate() - diffToMonday)
+    currentWeekStart.setHours(0, 0, 0, 0)
+
+    // Build 4 prior weekly buckets (Mon–Sun), excluding the current week
+    const weeks = []
+    for (let i = 1; i <= 4; i++) {
+        const start = new Date(currentWeekStart)
+        start.setDate(currentWeekStart.getDate() - i * 7)
+        const end = new Date(start)
+        end.setDate(start.getDate() + 7)
+        weeks.push({ start, end })
+    }
+
+    // Current week volume per section
+    const currentBySect = {}
+    allWorkouts
+        .filter((w) => new Date(w.created_at) >= currentWeekStart)
+        .forEach((w) => {
+            const section = w.exercises?.type ?? 'Unknown'
+            currentBySect[section] = (currentBySect[section] || [])
+            currentBySect[section].push(w)
+        })
+
+    const currentLoad = {}
+    Object.entries(currentBySect).forEach(([s, sets]) => {
+        currentLoad[s] = totalWeight(sets)
+    })
+
+    // Rolling 4-week averages per section
+    const historicBySectByWeek = {} // section -> array of weekly totals (one per week)
+    weeks.forEach(({ start, end }) => {
+        const weekWorkouts = allWorkouts.filter(
+            (w) => new Date(w.created_at) >= start && new Date(w.created_at) < end,
+        )
+        const sectTotals = {}
+        weekWorkouts.forEach((w) => {
+            const section = w.exercises?.type ?? 'Unknown'
+            sectTotals[section] = (sectTotals[section] || 0) +
+                (Number(w.weight) || 0) * (Number(w.reps) || 0)
+        })
+        Object.entries(sectTotals).forEach(([s, vol]) => {
+            historicBySectByWeek[s] = historicBySectByWeek[s] || []
+            historicBySectByWeek[s].push(vol)
+        })
+    })
+
+    // Check if there is any historical data at all
+    const totalHistoricWeeks = Object.values(historicBySectByWeek)
+    if (totalHistoricWeeks.every((arr) => arr.length === 0)) return []
+
+    const allSections = new Set([
+        ...Object.keys(currentLoad),
+        ...Object.keys(historicBySectByWeek),
+    ])
+
+    const results = []
+    allSections.forEach((section) => {
+        const histWeeks = historicBySectByWeek[section] || []
+        if (histWeeks.length === 0) return // No historical data for this section — skip
+        const avgLoad = histWeeks.reduce((s, v) => s + v, 0) / 4 // average over 4 weeks (0 for absent weeks)
+        const curr = currentLoad[section] || 0
+        const gap = Math.max(0, avgLoad - curr)
+        const percentOfAvg = avgLoad > 0 ? Math.round((curr / avgLoad) * 100) : 100
+        results.push({ section, currentLoad: Math.round(curr), avgLoad: Math.round(avgLoad), gap: Math.round(gap), percentOfAvg })
+    })
+
+    // Sort by gap descending (most lagging first)
+    return results.sort((a, b) => b.gap - a.gap)
+}
+
+/**
+ * Returns the last N sessions' total volumes (weight × reps) for a given exercise,
+ * in ascending date order. Each "session" is a unique training day.
+ *
+ * @param {Array} workouts - full workouts array
+ * @param {string|number} exerciseId - the exercise to filter by
+ * @param {number} n - number of sessions to return (default 7)
+ * @returns {number[]} array of volume numbers, oldest first
+ */
+export function getExerciseVolumeTrend(workouts, exerciseId, n = 7) {
+    if (!workouts || !exerciseId) return []
+
+    const exWorkouts = workouts.filter((w) => w.exercise_id === exerciseId)
+    if (!exWorkouts.length) return []
+
+    // Aggregate volume per training day
+    const dailyVolume = {}
+    exWorkouts.forEach((w) => {
+        const ymd =
+            w.ymd ||
+            (w.created_at
+                ? new Date(w.created_at).toISOString().slice(0, 10)
+                : 'today')
+        dailyVolume[ymd] = (dailyVolume[ymd] || 0) + (w.weight || 0) * (w.reps || 0)
+    })
+
+    // Sort days ascending, take last N
+    const sortedDays = Object.keys(dailyVolume).sort()
+    const lastN = sortedDays.slice(-n)
+    return lastN.map((d) => dailyVolume[d])
+}
+
 
 
 export function computePrevStatsBySectionAndExercise(allWorkouts = []) {

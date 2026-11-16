@@ -36,6 +36,7 @@ import Preferences from './components/Preferences'
 import AddExerciseForm from './components/AddExerciseForm'
 import TargetsForm from './components/TargetsForm'
 import LoginForm from './components/LoginForm'
+import SuggestionsPage from './components/Suggestions'
 
 import './App.css'
 
@@ -45,6 +46,9 @@ export default function App() {
     const [workouts, setWorkouts] = useState([])
     const [muscleTargets, setMuscleTargets] = useState({})
     const [hiddenExercises, setHiddenExercises] = useState([])
+    const [bodyweight, setBodyweight] = useState(
+        () => Number(localStorage.getItem('bodyweight_kg')) || null,
+    )
 
     const [tab, setTab] = useState('current')
 
@@ -57,6 +61,16 @@ export default function App() {
 
     const [showWorkoutTip, setShowWorkoutTip] = useState(true)
     const [showThisWeekTip, setShowThisWeekTip] = useState(true)
+
+    // Sync bodyweight when Preferences updates localStorage (same-tab writes)
+    useEffect(() => {
+        function handleStorage() {
+            const val = Number(localStorage.getItem('bodyweight_kg')) || null
+            setBodyweight(val)
+        }
+        window.addEventListener('storage', handleStorage)
+        return () => window.removeEventListener('storage', handleStorage)
+    }, [])
 
     // -----------------------------------------------------------
     // LOAD WORKOUTS + MUSCLE TARGETS
@@ -246,11 +260,12 @@ export default function App() {
                             toGoToday={toGoToday}
                             todayLoad={todayLoad}
                             prevWeekAvg={prevWeekAvg}
+                            bodyweight={bodyweight}
                         />
                     </>
                 )}
 
-                {tab === 'history' && <WorkoutList workouts={workouts} />}
+                {tab === 'history' && <WorkoutList workouts={workouts} bodyweight={bodyweight} />}
 
                 {tab === 'summary' && <WorkoutSummary workouts={workouts} />}
 
@@ -258,6 +273,7 @@ export default function App() {
                     <Preferences
                         hiddenExercises={hiddenExercises}
                         setHiddenExercises={setHiddenExercises}
+                        onBodyweightChange={(val) => setBodyweight(val ? Number(val) : null)}
                     />
                 )}
 
@@ -275,6 +291,16 @@ export default function App() {
                 )}
 
                 {tab === 'add-exercise' && <AddExerciseForm />}
+
+                {tab === 'suggest' && (
+                    <SuggestionsPage
+                        workouts={workouts}
+                        onSelectExercise={(exerciseName) => {
+                            setFormSearchTerms([exerciseName])
+                            setTab('current')
+                        }}
+                    />
+                )}
             </div>
         </div>
     )

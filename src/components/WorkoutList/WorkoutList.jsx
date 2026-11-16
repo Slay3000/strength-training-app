@@ -40,6 +40,7 @@ export default function WorkoutList({
     toGoToday,
     todayLoad,
     prevWeekAvg,
+    bodyweight,
 }) {
     const [collapsedDates, setCollapsedDates] = useState({})
     const [collapsedTypes, setCollapsedTypes] = useState({})
@@ -131,6 +132,7 @@ export default function WorkoutList({
                                                                 name,
                                                             )
                                                         }
+                                                        bodyweight={bodyweight}
                                                     />
                                                 )
                                             },

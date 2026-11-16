@@ -244,4 +244,30 @@ describe('ExerciseCard Component', () => {
 
         expect(screen.queryByText(/🏆 PR/i)).not.toBeInTheDocument()
     })
+
+    test('renders sparkline when exercise has 2 or more sessions', () => {
+        const historySets = [
+            { id: 1, reps: 10, weight: 50, exercise_id: 'ex-5', created_at: '2026-10-01T10:00:00Z' },
+            { id: 2, reps: 10, weight: 60, exercise_id: 'ex-5', created_at: '2026-10-15T10:00:00Z' },
+        ]
+        const todaySets = [
+            { id: 3, reps: 10, weight: 65, exercise_id: 'ex-5', created_at: '2026-10-23T10:00:00Z' },
+        ]
+
+        const { container } = render(
+            <ExerciseCard
+                name="Shoulder Press"
+                sets={todaySets}
+                exKey="2026-10-23-Shoulders-Shoulder Press"
+                workouts={[...historySets, ...todaySets]}
+                hideDate={true}
+                openPR={{}}
+                setOpenPR={jest.fn()}
+                collapsed={false}
+                onToggle={jest.fn()}
+            />,
+        )
+
+        expect(container.querySelector('.exercise-sparkline')).toBeInTheDocument()
+    })
 })

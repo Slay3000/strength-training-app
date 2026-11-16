@@ -211,3 +211,83 @@ export const computeRecoveryScores = (
         sections: sectionScores,
     }
 }
+
+/**
+ * Computes the Acute:Chronic Workload Ratio (ACWR) for overall and per muscle section.
+ *
+ * Acute load  = average daily volume (weight × reps) over last 7 days
+ * Chronic load = average daily volume (weight × reps) over last 28 days
+ * ACWR = acute / chronic  (null when chronic === 0)
+ *
+ * Zones:
+ *   < 0.8   → "Undertraining 🟢"
+ *   0.8–1.3 → "Optimal 🟡"
+ *   1.3–1.5 → "High Risk 🟠"
+ *   > 1.5   → "Danger ❌"
+ *
+ * @param {Array} allWorkouts - Flat array of workout sets.
+ *   Each: { id, exercise_id, weight, reps, created_at, exercises: { name, type } }
+ * @returns {{ overall: { acwr, zone, label }, sections: { [type]: { acwr, zone, label } } }}
+ */
+export const computeACWR = (allWorkouts = []) => {
+    const now = new Date()
+
+    const msPerDay = 24 * 60 * 60 * 1000
+    const cutoff7  = new Date(now - 7  * msPerDay)
+    const cutoff28 = new Date(now - 28 * msPerDay)
+
+    // Classify each set
+    const acute  = []  // last 7 days
+    const chronic = [] // last 28 days (includes acute window)
+
+    for (const w of allWorkouts) {
+        const date = new Date(w.created_at)
+        const volume = (w.weight || 0) * (w.reps || 0)
+        if (date >= cutoff28) chronic.push({ date, volume, type: w.exercises?.type || 'Unknown' })
+        if (date >= cutoff7)  acute.push({ date, volume, type: w.exercises?.type || 'Unknown' })
+    }
+
+    // Sum volumes by day bucket (keyed to YYYY-MM-DD)
+    const dailySum = (sets) => {
+        const byDay = {}
+        for (const s of sets) {
+            const key = s.date.toISOString().slice(0, 10)
+            byDay[key] = (byDay[key] || 0) + s.volume
+        }
+        return byDay
+    }
+
+    const avgDaily = (byDay) => {
+        const vals = Object.values(byDay)
+        return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
+    }
+
+    const getZone = (ratio) => {
+        if (ratio < 0.8)  return { zone: 'undertraining', label: 'Undertraining 🟢' }
+        if (ratio <= 1.3) return { zone: 'optimal',       label: 'Optimal 🟡' }
+        if (ratio <= 1.5) return { zone: 'high-risk',     label: 'High Risk 🟠' }
+        return                    { zone: 'danger',        label: 'Danger ❌' }
+    }
+
+    const buildACWR = (acuteSets, chronicSets) => {
+        const acuteAvg   = avgDaily(dailySum(acuteSets))
+        const chronicAvg = avgDaily(dailySum(chronicSets))
+        if (chronicAvg === 0) return { acwr: null, zone: null, label: '—' }
+        const ratio = acuteAvg / chronicAvg
+        return { acwr: Math.round(ratio * 100) / 100, ...getZone(ratio) }
+    }
+
+    // Overall
+    const overallACWR = buildACWR(acute, chronic)
+
+    // Per section
+    const allTypes = [...new Set(chronic.map((s) => s.type))]
+    const sections = {}
+    for (const type of allTypes) {
+        const acuteSec   = acute.filter((s)   => s.type === type)
+        const chronicSec = chronic.filter((s) => s.type === type)
+        sections[type] = buildACWR(acuteSec, chronicSec)
+    }
+
+    return { overall: overallACWR, sections }
+}
