@@ -26,7 +26,7 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
         return (
             <div className="suggestions-empty">
                 {hasHistory
-                    ? '🏆 Great work — all muscle groups are on track this week!'
+                    ? 'All muscle groups are on track this week.'
                     : 'Not enough history yet — keep training!'}
             </div>
         )
@@ -106,7 +106,7 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
 
     return (
         <div className="suggestions-page">
-            <h2 className="suggestions-title">💡 Today's Suggestions</h2>
+            <h2 className="suggestions-title">Today's Suggestions</h2>
             <p className="suggestions-subtitle">
                 Muscle groups lagging behind your 4-week average
             </p>
@@ -147,7 +147,7 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
                                     {suggestions.recent.length > 0 && (
                                         <div className="suggestion-subgroup">
                                             <div className="suggestion-subgroup-title">
-                                                🔥 Recent ({suggestions.recent.length}):
+                                                Recent ({suggestions.recent.length}):
                                             </div>
                                             <div className="suggestion-chips">
                                                 {suggestions.recent.map((ex) => (
@@ -169,7 +169,7 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
                                     {suggestions.neglected.length > 0 && (
                                         <div className="suggestion-subgroup">
                                             <div className="suggestion-subgroup-title">
-                                                ⏳ Haven't done in a while ({suggestions.neglected.length}):
+                                                Haven't done in a while ({suggestions.neglected.length}):
                                             </div>
                                             <div className="suggestion-chips">
                                                 {suggestions.neglected.map((ex) => (

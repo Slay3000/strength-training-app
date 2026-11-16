@@ -19,7 +19,7 @@ export default function OverallSummarySection({
     return (
         <div className="summary-section">
             <h2 className="collapsible-header" onClick={onToggle}>
-                🧮 Overall Summary ({toYMD(weekStartDate)} — {toYMD(today)})
+                Overall Summary ({toYMD(weekStartDate)} — {toYMD(today)})
             </h2>
 
             {isOpen && (

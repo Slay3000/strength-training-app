@@ -95,7 +95,7 @@ export default function WorkoutFormRow({
                                 onClick={handleUseLast}
                                 title="Auto-fill with last workout values"
                             >
-                                ⚡ Use Last ({stats.last.reps} × {stats.last.weight} kg)
+                                Use Last ({stats.last.reps} × {stats.last.weight} kg)
                             </button>
                         </div>
                     )}

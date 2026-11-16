@@ -220,10 +220,10 @@ export const computeRecoveryScores = (
  * ACWR = acute / chronic  (null when chronic === 0)
  *
  * Zones:
- *   < 0.8   → "Undertraining 🟢"
- *   0.8–1.3 → "Optimal 🟡"
- *   1.3–1.5 → "High Risk 🟠"
- *   > 1.5   → "Danger ❌"
+ *   < 0.8   → "Undertraining"
+ *   0.8–1.3 → "Optimal"
+ *   1.3–1.5 → "High Risk"
+ *   > 1.5   → "Danger"
  *
  * @param {Array} allWorkouts - Flat array of workout sets.
  *   Each: { id, exercise_id, weight, reps, created_at, exercises: { name, type } }
@@ -263,10 +263,10 @@ export const computeACWR = (allWorkouts = []) => {
     }
 
     const getZone = (ratio) => {
-        if (ratio < 0.8)  return { zone: 'undertraining', label: 'Undertraining 🟢' }
-        if (ratio <= 1.3) return { zone: 'optimal',       label: 'Optimal 🟡' }
-        if (ratio <= 1.5) return { zone: 'high-risk',     label: 'High Risk 🟠' }
-        return                    { zone: 'danger',        label: 'Danger ❌' }
+        if (ratio < 0.8)  return { zone: 'undertraining', label: 'Undertraining' }
+        if (ratio <= 1.3) return { zone: 'optimal',       label: 'Optimal' }
+        if (ratio <= 1.5) return { zone: 'high-risk',     label: 'High Risk' }
+        return                    { zone: 'danger',        label: 'Danger' }
     }
 
     const buildACWR = (acuteSets, chronicSets) => {

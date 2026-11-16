@@ -22,7 +22,7 @@ export class WorkoutDay {
         return sections
     }
 
-    /** 🧮 Helpers */
+    /** Helpers */
     getTotalWeight() {
         return Object.values(this.sections)
             .flatMap((exs) => Object.values(exs).flat())
@@ -45,7 +45,7 @@ export class WorkoutDay {
     }
 
     /**
-     * 🔁 Compare this day to another WorkoutDay (previous vs current)
+     * Compare this day to another WorkoutDay (previous vs current)
      * - this = previous day
      * - otherDay = current day
      */
@@ -126,7 +126,7 @@ export class WorkoutDay {
         }
     }
 
-    /** ⚙️ Static helper — get most recent previous day before a given date */
+    /** Static helper — get most recent previous day before a given date */
     static getPreviousDay(allWorkouts, today = new Date()) {
         const todayStr = today.toISOString().slice(0, 10)
 
@@ -242,7 +242,7 @@ export class WorkoutWeek {
             }
         }
 
-        this.totalLoad = overallCurrentTotal // ✅ update totalLoad
+        this.totalLoad = overallCurrentTotal // update totalLoad
 
         sections.overall = {
             type: 'Overall',

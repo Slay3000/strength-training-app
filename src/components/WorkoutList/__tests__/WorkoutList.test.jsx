@@ -120,7 +120,7 @@ describe('TodaySummaryBar Component', () => {
             />,
         )
 
-        expect(screen.getByText(/🔥 Beat Last Week!/i)).toBeInTheDocument()
+        expect(screen.getByText(/Beat Last Week/i)).toBeInTheDocument()
         expect(screen.getByText(/\+300 kg/i)).toBeInTheDocument()
         expect(container.querySelector('.goal-reached')).toBeInTheDocument()
         expect(container.querySelector('.positive')).toBeInTheDocument()
@@ -154,7 +154,7 @@ describe('ExerciseCard Component', () => {
         expect(screen.getByText('Set 1')).toBeInTheDocument()
         expect(screen.getByText('Set 2')).toBeInTheDocument()
         // Set 2 has weight 100, which beats previous max of 90 -> New PR!
-        expect(screen.getByText(/🏆 PR/i)).toBeInTheDocument()
+        expect(screen.getByText(/^PR$/i)).toBeInTheDocument()
     })
 
     test('badge bug regression: 4 sets of same weight do NOT all get PR badges', () => {
@@ -189,7 +189,7 @@ describe('ExerciseCard Component', () => {
         expect(screen.getByText('Set 4')).toBeInTheDocument()
 
         // Only ONE PR badge should appear across all 4 sets (on Set 2)
-        const prBadges = screen.getAllByText(/🏆 PR/i)
+        const prBadges = screen.getAllByText(/^PR$/i)
         expect(prBadges).toHaveLength(1)
     })
 
@@ -218,8 +218,8 @@ describe('ExerciseCard Component', () => {
             />,
         )
 
-        expect(screen.queryByText(/🏆 PR/i)).not.toBeInTheDocument()
-        expect(screen.queryByText(/🏆 1RM PR/i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/^PR$/i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/^1RM PR$/i)).not.toBeInTheDocument()
     })
 
     test('no PR badge is rendered on initial workout for an exercise', () => {
@@ -242,7 +242,7 @@ describe('ExerciseCard Component', () => {
             />,
         )
 
-        expect(screen.queryByText(/🏆 PR/i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/^PR$/i)).not.toBeInTheDocument()
     })
 
     test('renders sparkline when exercise has 2 or more sessions', () => {

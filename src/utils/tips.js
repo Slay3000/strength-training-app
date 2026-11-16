@@ -1,6 +1,6 @@
 export function getLastWeekTip(undertrained) {
     if (undertrained.length === 0)
-        return 'Tip: Great balance last week! Keep it up 🔥'
+        return 'Tip: Great balance last week! Keep it up.'
 
     if (undertrained.length === 1) {
         const m = undertrained[0].muscle
@@ -13,7 +13,7 @@ export function getLastWeekTip(undertrained) {
 
 export function getThisWeekTip(undertrained) {
     if (undertrained.length === 0)
-        return 'This Week Tip: This week is well balanced so far. Great job 🔥'
+        return 'This Week Tip: This week is well balanced so far. Great job.'
 
     const muscles = undertrained.map((x) => x.muscle).join(', ')
     return `This Week Tip: You undertrained ${muscles} so far. Focus on them today.`

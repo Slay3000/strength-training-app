@@ -139,7 +139,7 @@ export default function ExerciseCard({
                                             className="set-pr-badge"
                                             title="All-time Weight PR for this exercise"
                                         >
-                                            🏆 PR
+                                            PR
                                         </span>
                                     )}
                                     {!isWeightPR && isE1RMPR && (
@@ -147,7 +147,7 @@ export default function ExerciseCard({
                                             className="set-pr-badge"
                                             title="All-time Estimated 1RM PR"
                                         >
-                                            🏆 1RM PR
+                                            1RM PR
                                         </span>
                                     )}
                                 </div>

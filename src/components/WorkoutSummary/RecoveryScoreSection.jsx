@@ -7,7 +7,7 @@ export default function RecoveryScoreSection({ recoveryStats, openSections, togg
                 className="summary-section"
                 style={{ borderLeft: `5px solid ${recoveryStats.overall.color}` }}
             >
-                <h2 className="collapsible-header">🛌 Recovery Score</h2>
+                <h2 className="collapsible-header">Recovery Score</h2>
                 <div className="stats-row">
                     <div className="stats-block">
                         <span
@@ -35,7 +35,7 @@ export default function RecoveryScoreSection({ recoveryStats, openSections, togg
                     className="collapsible-header"
                     onClick={() => toggleSection('recoveryBySection')}
                 >
-                    💪 Recovery Score by Section
+                    Recovery Score by Section
                 </h2>
                 {openSections.recoveryBySection && (
                     <div className="exercise-breakdown">

@@ -26,7 +26,7 @@ describe('WorkoutFormRow Component', () => {
             />,
         )
 
-        const useLastBtn = screen.getByText(/⚡ Use Last/i)
+        const useLastBtn = screen.getByText(/Use Last/i)
         expect(useLastBtn).toBeInTheDocument()
 
         fireEvent.click(useLastBtn)

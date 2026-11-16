@@ -34,7 +34,7 @@ export default function TodaySummaryBar({ todayLoad, prevWeekAvg, toGoToday }) {
                     <div className="daily-progress-header">
                         <span className="daily-progress-label">
                             {isGoalReached
-                                ? '🔥 Beat Last Week!'
+                                ? 'Beat Last Week'
                                 : 'Daily Target Progress'}
                         </span>
                         <span className="daily-progress-value">

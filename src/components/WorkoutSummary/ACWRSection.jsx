@@ -28,7 +28,7 @@ export default function ACWRSection({ workouts, openSections, toggleSection }) {
                 className="summary-section"
                 style={{ borderLeft: `5px solid ${overallColor}` }}
             >
-                <h2 className="collapsible-header">⚡ Fatigue Score (ACWR)</h2>
+                <h2 className="collapsible-header">Fatigue Score (ACWR)</h2>
                 <div className="stats-row">
                     <div className="stats-block">
                         <span
@@ -56,7 +56,7 @@ export default function ACWRSection({ workouts, openSections, toggleSection }) {
                     className="collapsible-header"
                     onClick={() => toggleSection('acwrBySection')}
                 >
-                    🏋️ ACWR by Section
+                    ACWR by Section
                 </h2>
                 {openSections.acwrBySection && (
                     <div className="exercise-breakdown">
