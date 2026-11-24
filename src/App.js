@@ -45,6 +45,7 @@ export default function App() {
 
     const [workouts, setWorkouts] = useState([])
     const [muscleTargets, setMuscleTargets] = useState({})
+    const [dataLoading, setDataLoading] = useState(true)
     const [hiddenExercises, setHiddenExercises] = useState([])
     const [bodyweight, setBodyweight] = useState(
         () => Number(localStorage.getItem('bodyweight_kg')) || null,
@@ -76,39 +77,61 @@ export default function App() {
     // LOAD WORKOUTS + MUSCLE TARGETS
     // -----------------------------------------------------------
     useEffect(() => {
-        if (!USER_ID) return
+        if (!USER_ID) {
+            setDataLoading(false)
+            return
+        }
+
+        let isMounted = true
 
         async function loadData() {
-            // Workouts
-            const { data: workoutsData } = await fetchWorkouts(USER_ID)
-            setWorkouts(workoutsData || [])
-
-            // Targets
-            const { data: targets } = await fetchMuscleTargets(USER_ID)
-            if (targets?.length > 0) {
-                setMuscleTargets(
-                    Object.fromEntries(targets.map((t) => [t.muscle, t.ratio])),
-                )
-            } else {
-                const defaults = {
-                    Legs: 2.0,
-                    Back: 1.0,
-                    Chest: 1.0,
-                    Arms: 0.5,
-                    Shoulders: 0.5,
+            setDataLoading(true)
+            try {
+                // Workouts
+                const { data: workoutsData } = await fetchWorkouts(USER_ID)
+                if (isMounted) {
+                    setWorkouts(workoutsData || [])
                 }
-                setMuscleTargets(defaults)
-                await saveMuscleTargets(USER_ID, defaults)
+
+                // Targets
+                const { data: targets } = await fetchMuscleTargets(USER_ID)
+                if (isMounted) {
+                    if (targets?.length > 0) {
+                        setMuscleTargets(
+                            Object.fromEntries(
+                                targets.map((t) => [t.muscle, t.ratio]),
+                            ),
+                        )
+                    } else {
+                        const defaults = {
+                            Legs: 2.0,
+                            Back: 1.0,
+                            Chest: 1.0,
+                            Arms: 0.5,
+                            Shoulders: 0.5,
+                        }
+                        setMuscleTargets(defaults)
+                        await saveMuscleTargets(USER_ID, defaults)
+                    }
+                }
+            } finally {
+                if (isMounted) {
+                    setDataLoading(false)
+                }
             }
         }
 
         loadData()
+
+        return () => {
+            isMounted = false
+        }
     }, [USER_ID])
 
     // -----------------------------------------------------------
     // AUTH + LOGIN SCREENS
     // -----------------------------------------------------------
-    if (loading) return <p>Loading...</p>
+    if (loading || (USER_ID && dataLoading)) return <p>Loading...</p>
     if (!USER_ID) {
         return <LoginForm />
     }
@@ -212,29 +235,37 @@ export default function App() {
             <div className="tab-content">
                 {tab === 'current' && (
                     <>
-                        {showWorkoutTip && (
+                        {workouts.length > 0 && showWorkoutTip && (
                             <div className="workout-tip closable">
                                 <span>{workoutTip}</span>
                                 <button
+                                    type="button"
                                     className="tip-close-button"
                                     onClick={() => setShowWorkoutTip(false)}
+                                    aria-label="Dismiss tip"
                                 >
                                     ×
                                 </button>
                             </div>
                         )}
 
-                        {!hideThisWeekTip && showThisWeekTip && (
-                            <div className="workout-tip secondary-tip closable">
-                                <span>{thisWeekTip}</span>
-                                <button
-                                    className="tip-close-button"
-                                    onClick={() => setShowThisWeekTip(false)}
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        )}
+                        {workouts.length > 0 &&
+                            !hideThisWeekTip &&
+                            showThisWeekTip && (
+                                <div className="workout-tip secondary-tip closable">
+                                    <span>{thisWeekTip}</span>
+                                    <button
+                                        type="button"
+                                        className="tip-close-button"
+                                        onClick={() =>
+                                            setShowThisWeekTip(false)
+                                        }
+                                        aria-label="Dismiss tip"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            )}
 
                         <WorkoutForm
                             workouts={workouts}

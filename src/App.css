@@ -17,6 +17,10 @@
     --danger: #dc2626;
     --success: #16a34a;
 
+    --warning: #d97706;
+    --warning-bg: rgba(217, 119, 6, 0.1);
+    --warning-border: rgba(217, 119, 6, 0.28);
+
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
@@ -35,6 +39,10 @@
 
         --primary: #3b82f6;
         --primary-hover: #2563eb;
+
+        --warning: #fbbf24;
+        --warning-bg: rgba(251, 191, 36, 0.12);
+        --warning-border: rgba(251, 191, 36, 0.3);
 
         --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.55);
     }
@@ -292,38 +300,83 @@ body {
 /* ----------------------------------------------
    TIPS
 ------------------------------------------------*/
-.closable {
-    position: relative;
-    padding-right: 32px;
-}
-
-.tip-close-button {
-    position: absolute;
-    right: 10px;
-    top: 8px;
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: var(--text-light);
-}
-
-.tip-close-button:hover {
-    color: var(--text);
-}
-
-/* Tip cards */
 .workout-tip {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
     background: var(--bg-soft);
+    border: 1px solid var(--border);
     border-left: 4px solid var(--primary);
-    padding: 12px 16px;
+    padding: 12px 14px;
     border-radius: 8px;
     margin-bottom: 12px;
     font-size: 0.95rem;
+    line-height: 1.45;
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .secondary-tip {
     border-left-color: var(--success);
+}
+
+.workout-tip span {
+    flex: 1;
+    min-width: 0;
+}
+
+.tip-close-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    min-height: 26px;
+    padding: 0;
+    margin-top: -2px;
+    margin-right: -2px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-light);
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tip-close-button:hover {
+    background: var(--border);
+    color: var(--text);
+}
+
+.tip-close-button:active {
+    transform: scale(0.92);
+}
+
+@media (max-width: 600px) {
+    .workout-tip {
+        padding: 10px 12px;
+        gap: 8px;
+        font-size: 0.9rem;
+    }
+
+    .tip-close-button {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+        font-size: 20px;
+        border-radius: 8px;
+        margin-top: -3px;
+        margin-right: -3px;
+    }
 }
 
 /* ----------------------------------------------

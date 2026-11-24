@@ -14,7 +14,8 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
         })
     }, [])
 
-    if (loading) return <div className="suggestions-loading">Loading suggestions…</div>
+    if (loading)
+        return <div className="suggestions-loading">Loading suggestions…</div>
 
     const gaps = computeSectionGaps(workouts)
 
@@ -36,7 +37,9 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
     const recentExerciseDate = {} // exerciseId -> most recent date string
     workouts.forEach((w) => {
         const id = w.exercise_id
-        const date = w.created_at ? new Date(w.created_at).toISOString().slice(0, 10) : ''
+        const date = w.created_at
+            ? new Date(w.created_at).toISOString().slice(0, 10)
+            : ''
         if (!recentExerciseDate[id] || date > recentExerciseDate[id]) {
             recentExerciseDate[id] = date
         }
@@ -46,7 +49,10 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
         if (!dateStr) return 'Never'
         const now = new Date()
         const then = new Date(dateStr)
-        const diffDays = Math.max(0, Math.floor((now - then) / (1000 * 60 * 60 * 24)))
+        const diffDays = Math.max(
+            0,
+            Math.floor((now - then) / (1000 * 60 * 60 * 24)),
+        )
         if (diffDays === 0) return 'Today'
         if (diffDays === 1) return 'Yesterday'
         if (diffDays < 7) return `${diffDays}d ago`
@@ -113,29 +119,39 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
 
             <div className="suggestions-cards">
                 {lagging.map((item) => {
-                    const { section, currentLoad, avgLoad, gap, percentOfAvg } = item
+                    const { section, currentLoad, avgLoad, gap, percentOfAvg } =
+                        item
                     const suggestions = getSuggestionsForSection(section)
 
                     return (
                         <div key={section} className="suggestion-card">
                             <div className="suggestion-card-header">
-                                <span className="suggestion-section-name">{section}</span>
-                                <span className="suggestion-gap-badge">−{gap} kg</span>
+                                <span className="suggestion-section-name">
+                                    {section}
+                                </span>
+                                <span className="suggestion-gap-badge">
+                                    −{gap} kg
+                                </span>
                             </div>
 
                             <div className="suggestion-volume-row">
                                 <span className="suggestion-volume-text">
                                     This week: <strong>{currentLoad} kg</strong>
-                                    &nbsp;/&nbsp;avg: <strong>{avgLoad} kg</strong>
+                                    &nbsp;/&nbsp;avg:{' '}
+                                    <strong>{avgLoad} kg</strong>
                                 </span>
                             </div>
 
                             <div className="suggestion-bar-wrap">
                                 <div
                                     className="suggestion-bar-fill"
-                                    style={{ width: `${Math.min(percentOfAvg, 100)}%` }}
+                                    style={{
+                                        width: `${Math.min(percentOfAvg, 100)}%`,
+                                    }}
                                 />
-                                <span className="suggestion-bar-label">{percentOfAvg}% of avg</span>
+                                <span className="suggestion-bar-label">
+                                    {percentOfAvg}% of avg
+                                </span>
                             </div>
 
                             {suggestions.allEmpty ? (
@@ -147,21 +163,35 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
                                     {suggestions.recent.length > 0 && (
                                         <div className="suggestion-subgroup">
                                             <div className="suggestion-subgroup-title">
-                                                Recent ({suggestions.recent.length}):
+                                                Recent (
+                                                {suggestions.recent.length}):
                                             </div>
                                             <div className="suggestion-chips">
-                                                {suggestions.recent.map((ex) => (
-                                                    <button
-                                                        key={ex.id}
-                                                        className="suggestion-chip"
-                                                        onClick={() => onSelectExercise && onSelectExercise(ex.name)}
-                                                    >
-                                                        {ex.name}
-                                                        {ex.daysAgo > 0 && ex.daysAgo !== Infinity && (
-                                                            <span className="chip-time-badge">{ex.timeAgo}</span>
-                                                        )}
-                                                    </button>
-                                                ))}
+                                                {suggestions.recent.map(
+                                                    (ex) => (
+                                                        <button
+                                                            key={ex.id}
+                                                            className="suggestion-chip"
+                                                            onClick={() =>
+                                                                onSelectExercise &&
+                                                                onSelectExercise(
+                                                                    ex.name,
+                                                                )
+                                                            }
+                                                        >
+                                                            {ex.name}
+                                                            {ex.daysAgo > 0 &&
+                                                                ex.daysAgo !==
+                                                                    Infinity && (
+                                                                    <span className="chip-time-badge">
+                                                                        {
+                                                                            ex.timeAgo
+                                                                        }
+                                                                    </span>
+                                                                )}
+                                                        </button>
+                                                    ),
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -169,21 +199,29 @@ export default function SuggestionsPage({ workouts = [], onSelectExercise }) {
                                     {suggestions.neglected.length > 0 && (
                                         <div className="suggestion-subgroup">
                                             <div className="suggestion-subgroup-title">
-                                                Haven't done in a while ({suggestions.neglected.length}):
+                                                Haven't done in a while (
+                                                {suggestions.neglected.length}):
                                             </div>
                                             <div className="suggestion-chips">
-                                                {suggestions.neglected.map((ex) => (
-                                                    <button
-                                                        key={ex.id}
-                                                        className="suggestion-chip suggestion-chip-neglected"
-                                                        onClick={() => onSelectExercise && onSelectExercise(ex.name)}
-                                                    >
-                                                        {ex.name}
-                                                        <span className="chip-time-badge chip-time-neglected">
-                                                            {ex.timeAgo}
-                                                        </span>
-                                                    </button>
-                                                ))}
+                                                {suggestions.neglected.map(
+                                                    (ex) => (
+                                                        <button
+                                                            key={ex.id}
+                                                            className="suggestion-chip suggestion-chip-neglected"
+                                                            onClick={() =>
+                                                                onSelectExercise &&
+                                                                onSelectExercise(
+                                                                    ex.name,
+                                                                )
+                                                            }
+                                                        >
+                                                            {ex.name}
+                                                            <span className="chip-time-badge chip-time-neglected">
+                                                                {ex.timeAgo}
+                                                            </span>
+                                                        </button>
+                                                    ),
+                                                )}
                                             </div>
                                         </div>
                                     )}

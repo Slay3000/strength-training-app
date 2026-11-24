@@ -48,5 +48,36 @@ describe('App Component', () => {
             expect(screen.getByText(/Workout App/i)).toBeInTheDocument()
             expect(screen.getByText(/No workouts yet/i)).toBeInTheDocument()
         })
+        // Ensure default praise tip is not shown when no workouts exist
+        expect(screen.queryByText(/Great balance last week/i)).not.toBeInTheDocument()
+    })
+
+    test('does not flash default praise tip on refresh before data loads', async () => {
+        jest.spyOn(authHook, 'useAuth').mockReturnValue({
+            userId: 'user-123',
+            loading: false,
+        })
+
+        // Delay workouts response
+        let resolveWorkouts
+        workoutsService.fetchWorkouts.mockReturnValue(
+            new Promise((resolve) => {
+                resolveWorkouts = resolve
+            }),
+        )
+
+        render(<App />)
+
+        // While loading, loading indicator is shown and tips are not rendered
+        expect(screen.getByText(/Loading.../i)).toBeInTheDocument()
+        expect(screen.queryByText(/Great balance last week/i)).not.toBeInTheDocument()
+
+        // Resolve workouts
+        resolveWorkouts({ data: [] })
+
+        await waitFor(() => {
+            expect(screen.getByText(/Workout App/i)).toBeInTheDocument()
+        })
+        expect(screen.queryByText(/Great balance last week/i)).not.toBeInTheDocument()
     })
 })
